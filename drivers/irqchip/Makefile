@@ -25,6 +25,7 @@ obj-$(CONFIG_ORION_IRQCHIP)		+= irq-orion.o
 obj-$(CONFIG_OMAP_IRQCHIP)		+= irq-omap-intc.o
 obj-$(CONFIG_SUN4I_INTC)		+= irq-sun4i.o
 obj-$(CONFIG_SUN6I_R_INTC)		+= irq-sun6i-r.o
+obj-$(CONFIG_SUN20I_INTC)		+= irq-sun20i.o
 obj-$(CONFIG_SUNXI_NMI_INTC)		+= irq-sunxi-nmi.o
 obj-$(CONFIG_ARCH_SPEAR3XX)		+= spear-shirq.o
 obj-$(CONFIG_ARM_GIC)			+= irq-gic.o irq-gic-common.o
