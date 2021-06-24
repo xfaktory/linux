@@ -17,6 +17,7 @@
 #include <linux/of.h>
 #include <linux/platform_device.h>
 #include <linux/regmap.h>
+#include <linux/regulator/consumer.h>
 #include <linux/reset.h>
 #include <linux/slab.h>
 #include <linux/thermal.h>
@@ -66,6 +67,7 @@ struct tsensor {
 struct ths_thermal_chip {
 	bool            has_mod_clk;
 	bool            has_bus_clk_reset;
+	bool            has_vref_supply;
 	int		sensor_num;
 	int		offset;
 	int		scale;
@@ -83,6 +85,7 @@ struct ths_device {
 	const struct ths_thermal_chip		*chip;
 	struct device				*dev;
 	struct regmap				*regmap;
+	struct regulator			*vref_supply;
 	struct reset_control			*reset;
 	struct clk				*bus_clk;
 	struct clk                              *mod_clk;
@@ -339,6 +342,12 @@ static int sun8i_ths_resource_init(struct ths_device *tmdev)
 	tmdev->regmap = devm_regmap_init_mmio(dev, base, &config);
 	if (IS_ERR(tmdev->regmap))
 		return PTR_ERR(tmdev->regmap);
+
+	if (tmdev->chip->has_vref_supply) {
+		tmdev->vref_supply = devm_regulator_get_enable(dev, "vref");
+		if (IS_ERR(tmdev->vref_supply))
+			return PTR_ERR(tmdev->vref_supply);
+	}
 
 	if (tmdev->chip->has_bus_clk_reset) {
 		tmdev->reset = devm_reset_control_get(dev, NULL);
