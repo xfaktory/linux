@@ -1,0 +1,119 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+
+/dts-v1/;
+
+#include "rk3566-soquartz.dtsi"
+
+/ {
+	model = "Pine64 RK3566 SoQuartz with CM4 Carrier Board";
+	compatible = "pine64,soquartz-cm4", "pine64,soquartz", "rockchip,rk3566";
+
+	/* labeled +12v in schematic */
+	vcc12v_dcin: vcc12v_dcin {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc12v_dcin";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <12000000>;
+		regulator-max-microvolt = <12000000>;
+	};
+
+	/* labeled +5v in schematic */
+	vbus: vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "vbus";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		vin-supply = <&vcc12v_dcin>;
+	};
+
+	/* labeled +3.3v For PCIe only in schematic */
+	vcc3v3_pcie: 3v3_pcie {
+		compatible = "regulator-fixed";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-name = "vcc3v3_pcie";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		vin-supply = <&vcc12v_dcin>;
+	};
+};
+
+&combphy2 {
+	status = "okay";
+};
+
+/* i2c1 provides SCL/SDA pins 80/82 */
+&i2c1 {
+	status = "okay";
+
+	emc2301:  emc2301@2f {
+		reg = <0x2f>;
+		compatible = "microchip,emc2301";
+		#cooling-cells = <0x02>;
+
+		fan@0 {
+			min-rpm = /bits/ 16 <500>;
+			max-rpm = /bits/ 16 <5500>;
+		};
+	};
+
+	/* the rtc interrupt is tied to PMIC_PWRON,
+	 * it will force reset the board if triggered.
+	 */
+	pcf85063: rtc@51 {
+		compatible = "nxp,pcf85063";
+		reg = <0x51>;
+	};
+};
+
+&gmac1 {
+	status = "okay";
+};
+
+&led_diy {
+	status = "okay";
+};
+
+&led_work {
+	status = "okay";
+};
+
+&pcie2x1 {
+	vpcie3v3-supply = <&vcc3v3_pcie>;
+	status = "okay";
+};
+
+&rgmii_phy1 {
+	status = "okay";
+};
+
+&sdmmc0 {
+	vmmc-supply = <&sdmmc_pwr>;
+	status = "okay";
+};
+
+&sdmmc_pwr {
+	regulator-min-microvolt = <3300000>;
+	regulator-max-microvolt = <3300000>;
+	status = "okay";
+};
+
+&u2phy0 {
+	status = "okay";
+};
+
+&u2phy0_otg {
+	phy-supply = <&vbus>;
+	status = "okay";
+};
+
+&usbdrd_dwc3 {
+	status = "okay";
+};
+
+&usbdrd30 {
+	status = "okay";
+};
