@@ -251,6 +251,7 @@ const struct clk_ops ccu_mux_ops = {
 	.determine_rate	= __clk_mux_determine_rate,
 	.recalc_rate	= ccu_mux_recalc_rate,
 };
+EXPORT_SYMBOL_NS_GPL(ccu_mux_ops, SUNXI_CCU);
 
 /*
  * This clock notifier is called when the frequency of the of the parent
@@ -285,3 +286,4 @@ int ccu_mux_notifier_register(struct clk *clk, struct ccu_mux_nb *mux_nb)
 
 	return clk_notifier_register(clk, &mux_nb->clk_nb);
 }
+EXPORT_SYMBOL_NS_GPL(ccu_mux_notifier_register, SUNXI_CCU);
