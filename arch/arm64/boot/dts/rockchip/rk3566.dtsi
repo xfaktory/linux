@@ -23,6 +23,11 @@
 	};
 };
 
+&usbdrd_dwc3 {
+	extcon = <&usb2phy0>;
+	snps,dis_u2_susphy_quirk;
+};
+
 &vop {
 	compatible = "rockchip,rk3566-vop";
 };
