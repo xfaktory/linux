@@ -131,3 +131,8 @@
 		#power-domain-cells = <0>;
 	};
 };
+
+&usbdrd_dwc3 {
+	phys = <&u2phy0_otg>, <&combphy0 PHY_TYPE_USB3>;
+	phy-names = "usb2-phy", "usb3-phy";
+};
