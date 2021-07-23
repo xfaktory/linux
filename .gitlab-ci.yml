@@ -1,0 +1,5 @@
+update:
+  variables:
+    UPSTREAM_BRANCH: $CI_COMMIT_REF_NAME
+  trigger:
+    project: pgwipeout/quartz64_ci
