@@ -593,6 +593,28 @@
 		status = "disabled";
 	};
 
+	ebc: ebc@fdec0000 {
+		compatible = "rockchip,rk3568-ebc";
+		reg = <0x0 0xfdec0000 0x0 0x5000>;
+		interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&cru HCLK_EBC>, <&cru DCLK_EBC>;
+		clock-names = "hclk", "dclk";
+		pinctrl-0 = <&ebc_pins>;
+		pinctrl-names = "default";
+		power-domains = <&power RK3568_PD_RGA>;
+		rockchip,grf = <&grf>;
+		status = "disabled";
+	};
+
+	eink: eink@fdf00000 {
+		compatible = "rockchip,rk3568-eink-tcon";
+		reg = <0x0 0xfdf00000 0x0 0x74>;
+		clocks = <&cru PCLK_EINK>, <&cru HCLK_EINK>;
+		clock-names = "pclk", "hclk";
+		interrupts = <GIC_SPI 178 IRQ_TYPE_LEVEL_HIGH>;
+		status = "disabled";
+	};
+
 	sdmmc2: mmc@fe000000 {
 		compatible = "rockchip,rk3568-dw-mshc", "rockchip,rk3288-dw-mshc";
 		reg = <0x0 0xfe000000 0x0 0x4000>;
