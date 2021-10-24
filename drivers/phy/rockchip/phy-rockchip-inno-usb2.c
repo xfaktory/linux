@@ -942,7 +942,8 @@ static irqreturn_t rockchip_usb2phy_irq(int irq, void *data)
 			continue;
 
 		/* Handle linestate irq for both otg port and host port */
-		ret = rockchip_usb2phy_linestate_irq(irq, rport);
+		ret |= rockchip_usb2phy_linestate_irq(irq, rport);
+		ret |= rockchip_usb2phy_bvalid_irq(irq, rport);
 	}
 
 	return ret;
