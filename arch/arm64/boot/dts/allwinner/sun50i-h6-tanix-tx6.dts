@@ -107,6 +107,10 @@
 	};
 };
 
+&i2s1 {
+	status = "okay";
+};
+
 &mmc0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&mmc0_pins>;
@@ -146,6 +150,10 @@
 };
 
 &spdif {
+	status = "okay";
+};
+
+&sound_hdmi {
 	status = "okay";
 };
 
