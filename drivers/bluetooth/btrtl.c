@@ -736,8 +736,14 @@ struct btrtl_device_info *btrtl_initialize(struct hci_dev *hdev,
 		hci_rev = le16_to_cpu(resp->hci_rev);
 		lmp_subver = le16_to_cpu(resp->lmp_subver);
 
+		if (rtl_has_chip_type(lmp_subver)) {
+			ret = rtl_read_chip_type(hdev, &chip_type);
+			if (ret)
+				goto err_free;
+		}
+
 		btrtl_dev->ic_info = btrtl_match_ic(lmp_subver, hci_rev, hci_ver,
-						    hdev->bus);
+						    hdev->bus, chip_type);
 	}
 out_free:
 	kfree_skb(skb);
