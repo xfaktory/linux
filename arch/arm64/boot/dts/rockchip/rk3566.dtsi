@@ -30,3 +30,7 @@
 	maximum-speed = "high-speed";
 	snps,dis_u2_susphy_quirk;
 };
+
+&vop {
+	compatible = "rockchip,rk3566-vop";
+};
