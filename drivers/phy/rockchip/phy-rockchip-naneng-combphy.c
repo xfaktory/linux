@@ -16,6 +16,7 @@
 #include <linux/phy/phy.h>
 #include <linux/regmap.h>
 #include <linux/reset.h>
+#include <linux/units.h>
 #include <dt-bindings/phy/phy.h>
 
 #define BIT_WRITEABLE_SHIFT		16
