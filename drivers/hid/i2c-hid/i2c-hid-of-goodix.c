@@ -153,12 +153,18 @@ static int i2c_hid_of_goodix_probe(struct i2c_client *client,
 	return i2c_hid_core_probe(client, &ihid_goodix->ops, 0x0001);
 }
 
+static const struct goodix_i2c_hid_timing_data cypress_tt21000_timing_data = {
+	.post_power_delay_ms = 100,
+	.post_gpio_reset_delay_ms = 180,
+};
+
 static const struct goodix_i2c_hid_timing_data goodix_gt7375p_timing_data = {
 	.post_power_delay_ms = 10,
 	.post_gpio_reset_delay_ms = 180,
 };
 
 static const struct of_device_id goodix_i2c_hid_of_match[] = {
+	{ .compatible = "cypress,tt21000", .data = &cypress_tt21000_timing_data },
 	{ .compatible = "goodix,gt7375p", .data = &goodix_gt7375p_timing_data },
 	{ }
 };
