@@ -60,7 +60,7 @@
 
 /* debug option */
 static bool debug;
-module_param(debug, bool, 0444);
+module_param(debug, bool, 0644);
 MODULE_PARM_DESC(debug, "print a lot of debug information");
 
 #define i2c_hid_dbg(ihid, fmt, arg...)					  \
