@@ -46,7 +46,9 @@
 #define I2C_HID_QUIRK_RESET_ON_RESUME		BIT(5)
 #define I2C_HID_QUIRK_BAD_INPUT_SIZE		BIT(6)
 #define I2C_HID_QUIRK_NO_WAKEUP_AFTER_RESET	BIT(7)
-
+#define I2C_HID_QUIRK_NO_RESET			BIT(8)
+#define I2C_HID_QUIRK_DESCRIPTOR_PADDING	BIT(9)
+#define I2C_HID_QUIRK_SINGLE_TRANSFER		BIT(10)
 
 /* flags */
 #define I2C_HID_STARTED		0
@@ -158,6 +160,8 @@ struct i2c_hid {
 	struct i2chid_ops	*ops;
 };
 
+#define CYPRESS_TT21000_HID_DESC_LEN	(sizeof(struct i2c_hid_desc) + 2)
+
 static const struct i2c_hid_quirks {
 	__u16 idVendor;
 	__u16 idProduct;
@@ -183,6 +187,10 @@ static const struct i2c_hid_quirks {
 	{ USB_VENDOR_ID_ELAN, HID_ANY_ID,
 		 I2C_HID_QUIRK_NO_WAKEUP_AFTER_RESET |
 		 I2C_HID_QUIRK_BOGUS_IRQ },
+	{ USB_VENDOR_ID_CYPRESS, USB_DEVICE_ID_CYPRESS_TT21000,
+		I2C_HID_QUIRK_DESCRIPTOR_PADDING |
+		I2C_HID_QUIRK_NO_RESET |
+		I2C_HID_QUIRK_SINGLE_TRANSFER },
 	{ 0, 0 }
 };
 
@@ -217,6 +225,7 @@ static int __i2c_hid_command(struct i2c_client *client,
 	int ret;
 	struct i2c_msg msg[2];
 	int msg_num = 1;
+	int i;
 
 	int length = command->length;
 	bool wait = command->wait;
@@ -257,7 +266,8 @@ static int __i2c_hid_command(struct i2c_client *client,
 	if (wait)
 		set_bit(I2C_HID_RESET_PENDING, &ihid->flags);
 
-	ret = i2c_transfer(client->adapter, msg, msg_num);
+	for (i = 0, ret = 0; i < msg_num; ++i)
+		ret += i2c_transfer(client->adapter, msg + i, 1);
 
 	if (data_len > 0)
 		clear_bit(I2C_HID_READ_PENDING, &ihid->flags);
@@ -454,6 +464,9 @@ static int i2c_hid_hwreset(struct i2c_client *client)
 
 	ret = i2c_hid_set_power(client, I2C_HID_PWR_ON);
 	if (ret)
+		goto out_unlock;
+
+	if (ihid->quirks & I2C_HID_QUIRK_NO_RESET)
 		goto out_unlock;
 
 	i2c_hid_dbg(ihid, "resetting...\n");
@@ -700,6 +713,7 @@ static int i2c_hid_parse(struct hid_device *hid)
 	unsigned int rsize;
 	char *rdesc;
 	int ret;
+	int rpad = 0;
 	int tries = 3;
 	char *use_override;
 
@@ -745,9 +759,13 @@ static int i2c_hid_parse(struct hid_device *hid)
 		}
 	}
 
-	i2c_hid_dbg(ihid, "Report Descriptor: %*ph\n", rsize, rdesc);
+	/* Some Cypress devices return extra bytes before the descriptors. */
+	if (ihid->quirks & I2C_HID_QUIRK_DESCRIPTOR_PADDING)
+		rpad = 3;
 
-	ret = hid_parse_report(hid, rdesc, rsize);
+	i2c_hid_dbg(ihid, "Report Descriptor: %*ph\n", rsize - rpad, rdesc + rpad);
+
+	ret = hid_parse_report(hid, rdesc + rpad, rsize - rpad);
 	if (!use_override)
 		kfree(rdesc);
 
@@ -865,6 +883,31 @@ static int i2c_hid_fetch_hid_descriptor(struct i2c_hid *ihid)
 		}
 	}
 
+	dsize = le16_to_cpu(hdesc->wHIDDescLength);
+
+	/* Detect the Cypress TT2100 by its noncompliant descriptor length. */
+	if (dsize == CYPRESS_TT21000_HID_DESC_LEN) {
+		u8 temp_hdesc[CYPRESS_TT21000_HID_DESC_LEN];
+
+		/* Re-read the HID descriptor to pick up the last two bytes. */
+		ret = i2c_hid_command(client, &hid_descr_cmd,
+				      temp_hdesc, sizeof(temp_hdesc));
+		if (ret)
+			return -ENODEV;
+
+		/* And remove the two extra bytes from the middle. */
+		dsize = sizeof(struct i2c_hid_desc);
+		memcpy(ihid->hdesc_buffer + 2, temp_hdesc + 4, dsize - 2);
+		i2c_hid_dbg(ihid, "Corrected noncompliant HID descriptor\n");
+	}
+
+	/* Descriptor length should be 30 bytes as per the specification */
+	if (dsize != sizeof(struct i2c_hid_desc)) {
+		dev_err(&client->dev, "weird size of HID descriptor (%u)\n",
+			dsize);
+		return -ENODEV;
+	}
+
 	/* Validate the length of HID descriptor, the 4 first bytes:
 	 * bytes 0-1 -> length
 	 * bytes 2-3 -> bcdVersion (has to be 1.00) */
@@ -876,13 +919,6 @@ static int i2c_hid_fetch_hid_descriptor(struct i2c_hid *ihid)
 		return -ENODEV;
 	}
 
-	/* Descriptor length should be 30 bytes as per the specification */
-	dsize = le16_to_cpu(hdesc->wHIDDescLength);
-	if (dsize != sizeof(struct i2c_hid_desc)) {
-		dev_err(&client->dev, "weird size of HID descriptor (%u)\n",
-			dsize);
-		return -ENODEV;
-	}
 	i2c_hid_dbg(ihid, "HID Descriptor: %*ph\n", dsize, ihid->hdesc_buffer);
 	return 0;
 }
@@ -915,6 +951,7 @@ int i2c_hid_core_probe(struct i2c_client *client, struct i2chid_ops *ops,
 		       u16 hid_descriptor_address)
 {
 	int ret;
+	char dummy[2];
 	struct i2c_hid *ihid;
 	struct hid_device *hid;
 
@@ -962,7 +999,7 @@ int i2c_hid_core_probe(struct i2c_client *client, struct i2chid_ops *ops,
 	device_enable_async_suspend(&client->dev);
 
 	/* Make sure there is something at this address */
-	ret = i2c_smbus_read_byte(client);
+	ret = i2c_master_recv(client, dummy, sizeof(dummy));
 	if (ret < 0) {
 		dev_dbg(&client->dev, "nothing at this address: %d\n", ret);
 		ret = -ENXIO;
