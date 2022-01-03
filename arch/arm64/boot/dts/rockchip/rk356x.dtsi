@@ -262,7 +262,7 @@
 	};
 
 	usbdrd30: usbdrd {
-		compatible = "rockchip,rk3399-dwc3", "snps,dwc3";
+		compatible = "rockchip,rk3399-dwc3";
 		clocks = <&cru CLK_USB3OTG0_REF>, <&cru CLK_USB3OTG0_SUSPEND>,
 			 <&cru ACLK_USB3OTG0>, <&cru PCLK_PIPE>;
 		clock-names = "ref_clk", "suspend_clk",
@@ -291,7 +291,7 @@
 	};
 
 	usbhost30: usbhost {
-		compatible = "rockchip,rk3399-dwc3", "snps,dwc3";
+		compatible = "rockchip,rk3399-dwc3";
 		clocks = <&cru CLK_USB3OTG1_REF>, <&cru CLK_USB3OTG1_SUSPEND>,
 			 <&cru ACLK_USB3OTG1>, <&cru PCLK_PIPE>;
 		clock-names = "ref_clk", "suspend_clk",
