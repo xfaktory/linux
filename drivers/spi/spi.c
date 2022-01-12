@@ -996,6 +996,8 @@ static void spi_set_cs(struct spi_device *spi, bool enable, bool force)
 	    !spi->controller->set_cs_timing) {
 		if (!activate)
 			spi_delay_exec(&spi->cs_inactive, NULL);
+		else
+			msleep(7);
 	}
 }
 
