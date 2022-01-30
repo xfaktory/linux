@@ -4,6 +4,7 @@
 //
 
 #include <linux/clk.h>
+#include <linux/debugfs.h>
 #include <linux/devfreq.h>
 #include <linux/err.h>
 #include <linux/io.h>
@@ -69,7 +70,14 @@
 #define DRAM_DXnGCR0_DXODT_DISABLED	(0x2 << 4)
 #define DRAM_DXnGCR0_DXEN		(0x1 << 0)
 
+struct sun8i_a33_mbus_pmu_master {
+	u32		id;
+	const char	*name;
+};
+
 struct sun8i_a33_mbus_variant {
+	const struct sun8i_a33_mbus_pmu_master	*pmu_masters;
+	u32					num_pmu_masters;
 	u32					min_dram_divider;
 	u32					max_dram_divider;
 	u32					odt_freq_mhz;
@@ -312,6 +320,27 @@ static int sun8i_a33_mbus_hw_init(struct device *dev,
 	return 0;
 }
 
+static int sun8i_a33_mbus_show_usage(struct seq_file *s, void *data)
+{
+	struct sun8i_a33_mbus *priv = dev_get_drvdata(s->private);
+	const struct sun8i_a33_mbus_variant *variant = priv->variant;
+	u32 i;
+
+	seq_puts(s, " master             usage\n");
+	seq_puts(s, "--------------------------\n");
+	for (i = 0; i < variant->num_pmu_masters; ++i) {
+		u32 id = variant->pmu_masters[i].id;
+		seq_printf(s, " %-7s %10u KiB\n",
+			   variant->pmu_masters[i].name,
+			   readl_relaxed(priv->reg_mbus + MBUS_PMU_BWCR(id)));
+	}
+	seq_puts(s, "---------------------------\n");
+	seq_printf(s, " PEAK BW %10u KiB/s\n", sun8i_a33_mbus_get_peak_bw(priv));
+	seq_printf(s, " NOMINAL %10u KiB/s\n", priv->nominal_bw);
+
+	return 0;
+}
+
 static int __maybe_unused sun8i_a33_mbus_suspend(struct device *dev)
 {
 	struct sun8i_a33_mbus *priv = dev_get_drvdata(dev);
@@ -444,6 +473,9 @@ static int sun8i_a33_mbus_probe(struct platform_device *pdev)
 	 */
 	priv->devfreq_dram->suspend_freq = priv->freq_table[0];
 
+	debugfs_create_devm_seqfile(dev, "sun8i-mbus", NULL,
+				    sun8i_a33_mbus_show_usage);
+
 	return 0;
 
 err_remove_opps:
@@ -479,19 +511,42 @@ static int sun8i_a33_mbus_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static const struct sun8i_a33_mbus_pmu_master sun8i_a33_mbus_pmu_masters[] = {
+	{ 0, "CPU" },
+	{ 1, "GPU" },
+	{ 2, "VE" },
+	{ 3, "DISPLAY" },
+	{ 4, "OTHER" },
+};
+
 static const struct sun8i_a33_mbus_variant sun8i_a33_mbus = {
+	.pmu_masters		= sun8i_a33_mbus_pmu_masters,
+	.num_pmu_masters	= ARRAY_SIZE(sun8i_a33_mbus_pmu_masters),
 	.min_dram_divider	= 2,
 	.max_dram_divider	= 16,
 	.odt_freq_mhz		= 400,
 };
 
+static const struct sun8i_a33_mbus_pmu_master sun8i_h3_mbus_pmu_masters[] = {
+	{ 0, "CPU" },
+	{ 1, "GPU" },
+	{ 2, "VE" },
+	{ 3, "DISPLAY" },
+	{ 6, "CSI" },
+	{ 4, "OTHER" },
+};
+
 static const struct sun8i_a33_mbus_variant sun8i_h3_mbus = {
+	.pmu_masters		= sun8i_h3_mbus_pmu_masters,
+	.num_pmu_masters	= ARRAY_SIZE(sun8i_h3_mbus_pmu_masters),
 	.min_dram_divider	= 1,
 	.max_dram_divider	= 16,
 	.odt_freq_mhz		= 400,
 };
 
 static const struct sun8i_a33_mbus_variant sun50i_a64_mbus = {
+	.pmu_masters		= sun8i_h3_mbus_pmu_masters,
+	.num_pmu_masters	= ARRAY_SIZE(sun8i_h3_mbus_pmu_masters),
 	.min_dram_divider	= 1,
 	.max_dram_divider	= 4,
 	.odt_freq_mhz		= 400,
