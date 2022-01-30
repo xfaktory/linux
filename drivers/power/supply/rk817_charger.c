@@ -809,7 +809,7 @@ static int rk817_charger_probe(struct platform_device *pdev)
 	struct rk808 *rk808 = dev_get_drvdata(pdev->dev.parent);
 	struct rk817_charger *charger;
 	struct device_node *node;
-	struct power_supply_battery_info bat_info = { };
+	struct power_supply_battery_info *bat_info;
 	struct device *dev = &pdev->dev;
 	struct power_supply_config pscfg = {};
 	int plugin_irq, plugout_irq;
@@ -893,28 +893,28 @@ static int rk817_charger_probe(struct platform_device *pdev)
 				     "Unable to get battery info: %d\n", ret);
 	}
 
-	if ((!bat_info.charge_full_design_uah) ||
-	    (!bat_info.voltage_min_design_uv) ||
-	    (!bat_info.voltage_max_design_uv) ||
-	    (!bat_info.constant_charge_voltage_max_uv) ||
-	    (!bat_info.constant_charge_current_max_ua) ||
-	    (!bat_info.charge_term_current_ua)) {
+	if ((!bat_info->charge_full_design_uah) ||
+	    (!bat_info->voltage_min_design_uv) ||
+	    (!bat_info->voltage_max_design_uv) ||
+	    (!bat_info->constant_charge_voltage_max_uv) ||
+	    (!bat_info->constant_charge_current_max_ua) ||
+	    (!bat_info->charge_term_current_ua)) {
 		return dev_err_probe(dev, -EINVAL,
 				     "Required battery info missing.\n");
 	}
 
-	charger->bat_charge_full_design_uah = bat_info.charge_full_design_uah;
-	charger->bat_voltage_min_design_uv = bat_info.voltage_min_design_uv;
-	charger->bat_voltage_max_design_uv = bat_info.voltage_max_design_uv;
+	charger->bat_charge_full_design_uah = bat_info->charge_full_design_uah;
+	charger->bat_voltage_min_design_uv = bat_info->voltage_min_design_uv;
+	charger->bat_voltage_max_design_uv = bat_info->voltage_max_design_uv;
 
 	/* Has to run after power_supply_get_battery_info as it depends on some
 	 * values discovered from that routine.
 	 */
-	ret = rk817_battery_init(charger, &bat_info);
+	ret = rk817_battery_init(charger, bat_info);
 	if (ret)
 		return ret;
 
-	power_supply_put_battery_info(charger->bat_ps, &bat_info);
+	power_supply_put_battery_info(charger->bat_ps, bat_info);
 
 	plugin_irq = platform_get_irq(pdev, 0);
 	if (plugin_irq < 0)
