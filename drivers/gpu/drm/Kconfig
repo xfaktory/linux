@@ -28,6 +28,10 @@ menuconfig DRM
 	  details.  You should also select and configure AGP
 	  (/dev/agpgart) support if it is available for your platform.
 
+config DRM_EPD_LUT
+	tristate
+	depends on DRM
+
 config DRM_MIPI_DBI
 	tristate
 	depends on DRM
