@@ -510,6 +510,13 @@ static int sun8i_a33_mbus_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static const struct sun8i_a33_mbus_variant sun8i_a33_mbus = {
+	.set_dram_freq		= sun8i_a33_mbus_set_dram_freq_mdfs,
+	.min_dram_divider	= 2,
+	.max_dram_divider	= 16,
+	.odt_freq_mhz		= 400,
+};
+
 static const struct sun8i_a33_mbus_variant sun8i_h3_mbus = {
 	.set_dram_freq		= sun8i_a33_mbus_set_dram_freq_smc,
 	.min_dram_divider	= 1,
@@ -525,6 +532,8 @@ static const struct sun8i_a33_mbus_variant sun50i_a64_mbus = {
 };
 
 static const struct of_device_id sun8i_a33_mbus_of_match[] = {
+	{ .compatible = "allwinner,sun8i-a33-mbus", .data = &sun8i_a33_mbus },
+	{ .compatible = "allwinner,sun8i-a83t-mbus", .data = &sun8i_a33_mbus },
 	{ .compatible = "allwinner,sun8i-h3-mbus", .data = &sun8i_h3_mbus },
 	{ .compatible = "allwinner,sun50i-a64-mbus", .data = &sun50i_a64_mbus },
 	{ .compatible = "allwinner,sun50i-h5-mbus", .data = &sun50i_a64_mbus },
