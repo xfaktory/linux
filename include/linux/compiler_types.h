@@ -31,6 +31,9 @@ static inline void __chk_io_ptr(const volatile void __iomem *ptr) { }
 # define __kernel
 # ifdef STRUCTLEAK_PLUGIN
 #  define __user	__attribute__((user))
+# elif defined(CONFIG_DEBUG_INFO_BTF) && defined(CONFIG_PAHOLE_HAS_BTF_TAG) && \
+	__has_attribute(btf_type_tag)
+#  define __user	__attribute__((btf_type_tag("user")))
 # else
 #  define __user
 # endif
@@ -136,8 +139,6 @@ struct ftrace_likely_data {
  * restore the lr register to the value before mcount was called.
  */
 #define __naked			__attribute__((__naked__)) notrace
-
-#define __compiler_offsetof(a, b)	__builtin_offsetof(a, b)
 
 /*
  * Prefer gnu_inline, so that extern inline functions do not emit an

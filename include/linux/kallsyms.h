@@ -15,7 +15,7 @@
 
 #include <asm/sections.h>
 
-#define KSYM_NAME_LEN 128
+#define KSYM_NAME_LEN 512
 #define KSYM_SYMBOL_LEN (sizeof("%s+%#lx/%#lx [%s %s]") + \
 			(KSYM_NAME_LEN - 1) + \
 			2*(BITS_PER_LONG*3/10) + (MODULE_NAME_LEN - 1) + \
@@ -163,6 +163,33 @@ static inline bool kallsyms_show_value(const struct cred *cred)
 	return false;
 }
 
+#ifdef CONFIG_MODULES
+static inline int fill_minimal_module_info(char *sym, int size, unsigned long value)
+{
+	struct module *mod;
+	unsigned long offset;
+	int ret = 0;
+
+	preempt_disable();
+	mod = __module_address(value);
+	if (mod) {
+		offset = value - (unsigned long)mod->core_layout.base;
+		snprintf(sym, size - 1, "0x%lx+0x%lx [%s]",
+				(unsigned long)mod->core_layout.base, offset, mod->name);
+
+		sym[size - 1] = '\0';
+		ret = 1;
+	}
+
+	preempt_enable();
+	return ret;
+}
+#else
+static inline int fill_minimal_module_info(char *sym, int size, unsigned long value)
+{
+	return 0;
+}
+#endif /*CONFIG_MODULES*/
 #endif /*CONFIG_KALLSYMS*/
 
 static inline void print_ip_sym(const char *loglvl, unsigned long ip)
