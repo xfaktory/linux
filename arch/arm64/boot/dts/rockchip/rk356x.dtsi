@@ -602,7 +602,8 @@
 		pinctrl-0 = <&ebc_pins>;
 		pinctrl-names = "default";
 		power-domains = <&power RK3568_PD_RGA>;
-		rockchip,grf = <&grf>;
+		resets = <&cru SRST_H_EBC>, <&cru SRST_D_EBC>;
+		reset-names = "hclk", "dclk";
 		status = "disabled";
 	};
 
