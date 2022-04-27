@@ -6,6 +6,7 @@
  */
 
 #include <linux/dma-direct.h>
+#include <linux/dma-iommu.h>
 #include <linux/dma-map-ops.h>
 #include <linux/mm.h>
 
@@ -53,4 +54,7 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
 {
 	/* If a specific device is dma-coherent, set it here */
 	dev->dma_coherent = coherent;
+
+	if (iommu)
+		iommu_setup_dma_ops(dev, dma_base, dma_base + size - 1);
 }
