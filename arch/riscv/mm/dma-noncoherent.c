@@ -7,12 +7,7 @@
 
 #include <linux/dma-direct.h>
 #include <linux/dma-map-ops.h>
-#include <linux/init.h>
-#include <linux/io.h>
-#include <linux/libfdt.h>
 #include <linux/mm.h>
-#include <linux/of.h>
-#include <linux/of_fdt.h>
 
 void arch_sync_dma_for_device(phys_addr_t paddr, size_t size, enum dma_data_direction dir)
 {
