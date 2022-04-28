@@ -114,8 +114,8 @@ struct sun50i_iommu {
 struct sun50i_iommu_domain {
 	struct iommu_domain domain;
 
-	/* Number of devices attached to the domain */
-	refcount_t refcnt;
+	/* Mask of masters attached to this domain */
+	atomic_t masters;
 
 	/* L1 Page Table */
 	u32 *dt;
@@ -684,8 +684,6 @@ static struct iommu_domain *sun50i_iommu_domain_alloc(unsigned type)
 	if (!sun50i_domain->dt)
 		goto err_free_domain;
 
-	refcount_set(&sun50i_domain->refcnt, 1);
-
 	sun50i_domain->domain.geometry.aperture_start = 0;
 	sun50i_domain->domain.geometry.aperture_end = DMA_BIT_MASK(32);
 	sun50i_domain->domain.geometry.force_aperture = true;
@@ -760,23 +758,27 @@ static void sun50i_iommu_detach_domain(struct sun50i_iommu *iommu,
 static void sun50i_iommu_detach_device(struct iommu_domain *domain,
 				       struct device *dev)
 {
+	struct iommu_fwspec *fwspec = dev_iommu_fwspec_get(dev);
 	struct sun50i_iommu_domain *sun50i_domain = to_sun50i_domain(domain);
 	struct sun50i_iommu *iommu = dev_iommu_priv_get(dev);
+	int masters = 0;
 
 	dev_dbg(dev, "Detaching from IOMMU domain\n");
 
-	if (iommu->domain != domain)
-		return;
+	for (unsigned int i = 0; i < fwspec->num_ids; i++)
+		masters |= BIT(fwspec->ids[i]);
 
-	if (refcount_dec_and_test(&sun50i_domain->refcnt))
+	if (atomic_fetch_andnot(masters, &sun50i_domain->masters) == masters)
 		sun50i_iommu_detach_domain(iommu, sun50i_domain);
 }
 
 static int sun50i_iommu_attach_device(struct iommu_domain *domain,
 				      struct device *dev)
 {
+	struct iommu_fwspec *fwspec = dev_iommu_fwspec_get(dev);
 	struct sun50i_iommu_domain *sun50i_domain = to_sun50i_domain(domain);
 	struct sun50i_iommu *iommu;
+	int masters = 0;
 
 	iommu = sun50i_iommu_from_dev(dev);
 	if (!iommu)
@@ -784,15 +786,11 @@ static int sun50i_iommu_attach_device(struct iommu_domain *domain,
 
 	dev_dbg(dev, "Attaching to IOMMU domain\n");
 
-	refcount_inc(&sun50i_domain->refcnt);
+	for (unsigned int i = 0; i < fwspec->num_ids; i++)
+		masters |= BIT(fwspec->ids[i]);
 
-	if (iommu->domain == domain)
-		return 0;
-
-	if (iommu->domain)
-		sun50i_iommu_detach_device(iommu->domain, dev);
-
-	sun50i_iommu_attach_domain(iommu, sun50i_domain);
+	if (atomic_fetch_or(masters, &sun50i_domain->masters) == 0)
+		sun50i_iommu_attach_domain(iommu, sun50i_domain);
 
 	return 0;
 }
