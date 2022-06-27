@@ -26,9 +26,14 @@ description:
   with priority below this threshold will not cause the PLIC to raise its
   interrupt line leading to the context.
 
-  While the PLIC supports both edge-triggered and level-triggered interrupts,
-  interrupt handlers are oblivious to this distinction and therefore it is not
-  specified in the PLIC device-tree binding.
+  The PLIC supports both edge-triggered and level-triggered interrupts. For
+  edge-triggered interrupts, the RISC-V PLIC spec allows two responses to edges
+  seen while an interrupt handler is active; the PLIC may either queue them or
+  ignore them. In the first case, handlers are oblivious to the trigger type, so
+  it is not included in the interrupt specifier. In the second case, software
+  needs to know the trigger type, so it can reorder the interrupt flow to avoid
+  missing interrupts. This special handling is needed by at least the Allwinner
+  D1 SoC (with a T-HEAD C900 PLIC).
 
   While the RISC-V ISA doesn't specify a memory layout for the PLIC, the
   "sifive,plic-1.0.0" device is a concrete implementation of the PLIC that
@@ -65,7 +70,8 @@ properties:
     const: 0
 
   '#interrupt-cells':
-    const: 1
+    minimum: 1
+    maximum: 2
 
   interrupt-controller: true
 
@@ -90,6 +96,24 @@ required:
   - reg
   - interrupts-extended
   - riscv,ndev
+
+allOf:
+  - if:
+      properties:
+        compatible:
+          contains:
+            enum:
+              - thead,c900-plic
+
+    then:
+      properties:
+        '#interrupt-cells':
+          const: 2
+
+    else:
+      properties:
+        '#interrupt-cells':
+          const: 1
 
 additionalProperties: false
 
