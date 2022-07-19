@@ -38,11 +38,16 @@
 
 #define OCTEON_UART_USR	0x27 /* UART Status Register */
 
+#define SUNXI_UART_FCC	0xf0 /* FIFO Clock Control Register */
+
 #define RZN1_UART_TDMACR 0x10c /* DMA Control Register Transmit Mode */
 #define RZN1_UART_RDMACR 0x110 /* DMA Control Register Receive Mode */
 
 /* DesignWare specific register fields */
 #define DW_UART_MCR_SIRE		BIT(6)
+
+/* sunxi specific register fields */
+#define SUNXI_UART_FCC_FIFO_DEPTH	GENMASK(31, 8)
 
 /* Renesas specific register fields */
 #define RZN1_UART_xDMACR_DMA_EN		BIT(0)
@@ -57,6 +62,7 @@
 #define DW_UART_QUIRK_SKIP_SET_RATE	BIT(2)
 #define DW_UART_QUIRK_IS_DMA_FC		BIT(3)
 #define DW_UART_QUIRK_SKIP_AUTOCFG	BIT(4)
+#define DW_UART_QUIRK_SUNXI_FIFOSIZE	BIT(5)
 
 static inline struct dw8250_data *clk_to_dw8250_data(struct notifier_block *nb)
 {
@@ -651,6 +657,11 @@ static int dw8250_probe(struct platform_device *pdev)
 		dw8250_setup_port(p);
 	else if (data->pdata->cpr_val)
 		dw8250_setup_cpr(p, data->pdata->cpr_val);
+
+	if (data->pdata->quirks & DW_UART_QUIRK_SUNXI_FIFOSIZE) {
+		val = p->serial_in(p, SUNXI_UART_FCC);
+		p->fifosize = FIELD_GET(SUNXI_UART_FCC_FIFO_DEPTH, val);
+	}
 
 	/* If we have a valid fifosize, try hooking up DMA */
 	if (p->fifosize) {
