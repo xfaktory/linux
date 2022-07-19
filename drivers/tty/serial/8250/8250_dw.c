@@ -764,6 +764,30 @@ static const struct dw8250_platform_data dw8250_dw_apb = {
 	.usr_reg = DW_UART_USR,
 };
 
+static const struct dw8250_platform_data dw8250_sun4i_a10_data = {
+	.usr_reg = DW_UART_USR,
+	.cpr_val = 0x00010472,
+	.quirks  = DW_UART_QUIRK_SKIP_AUTOCFG,
+};
+
+static const struct dw8250_platform_data dw8250_sun6i_a31_data = {
+	.usr_reg = DW_UART_USR,
+	.cpr_val = 0x00040472,
+	.quirks  = DW_UART_QUIRK_SKIP_AUTOCFG,
+};
+
+static const struct dw8250_platform_data dw8250_sun50i_h6_data = {
+	.usr_reg = DW_UART_USR,
+	.cpr_val = 0x00100472,
+	.quirks  = DW_UART_QUIRK_SKIP_AUTOCFG,
+};
+
+static const struct dw8250_platform_data dw8250_sun50i_r329_data = {
+	.usr_reg = DW_UART_USR,
+	.cpr_val = 0x00010472,
+	.quirks  = DW_UART_QUIRK_SKIP_AUTOCFG | DW_UART_QUIRK_SUNXI_FIFOSIZE,
+};
+
 static const struct dw8250_platform_data dw8250_octeon_3860_data = {
 	.usr_reg = OCTEON_UART_USR,
 	.quirks = DW_UART_QUIRK_OCTEON | DW_UART_QUIRK_SKIP_AUTOCFG,
@@ -787,6 +811,11 @@ static const struct dw8250_platform_data dw8250_starfive_jh7100_data = {
 
 static const struct of_device_id dw8250_of_match[] = {
 	{ .compatible = "snps,dw-apb-uart", .data = &dw8250_dw_apb },
+	{ .compatible = "allwinner,sun4i-a10-uart", .data = &dw8250_sun4i_a10_data },
+	{ .compatible = "allwinner,sun6i-a31-uart", .data = &dw8250_sun6i_a31_data },
+	{ .compatible = "allwinner,sun8i-r40-uart", .data = &dw8250_sun6i_a31_data },
+	{ .compatible = "allwinner,sun50i-h6-uart", .data = &dw8250_sun50i_h6_data },
+	{ .compatible = "allwinner,sun50i-r329-uart", .data = &dw8250_sun50i_r329_data },
 	{ .compatible = "cavium,octeon-3860-uart", .data = &dw8250_octeon_3860_data },
 	{ .compatible = "marvell,armada-38x-uart", .data = &dw8250_armada_38x_data },
 	{ .compatible = "renesas,rzn1-uart", .data = &dw8250_renesas_rzn1_data },
