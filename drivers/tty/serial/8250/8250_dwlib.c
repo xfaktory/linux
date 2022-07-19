@@ -288,6 +288,14 @@ void dw8250_setup_port(struct uart_port *p)
 	if (!reg)
 		return;
 
+	dw8250_setup_cpr(p, reg);
+}
+EXPORT_SYMBOL_GPL(dw8250_setup_port);
+
+void dw8250_setup_cpr(struct uart_port *p, u32 reg)
+{
+	struct uart_8250_port *up = up_to_u8250p(p);
+
 	/* Select the type based on FIFO */
 	if (reg & DW_UART_CPR_FIFO_MODE) {
 		p->type = PORT_16550A;
@@ -302,4 +310,4 @@ void dw8250_setup_port(struct uart_port *p)
 	if (reg & DW_UART_CPR_SIR_MODE)
 		up->capabilities |= UART_CAP_IRDA;
 }
-EXPORT_SYMBOL_GPL(dw8250_setup_port);
+EXPORT_SYMBOL_GPL(dw8250_setup_cpr);

@@ -649,6 +649,8 @@ static int dw8250_probe(struct platform_device *pdev)
 
 	if (!(data->pdata->quirks & DW_UART_QUIRK_SKIP_AUTOCFG))
 		dw8250_setup_port(p);
+	else if (data->pdata->cpr_val)
+		dw8250_setup_cpr(p, data->pdata->cpr_val);
 
 	/* If we have a valid fifosize, try hooking up DMA */
 	if (p->fifosize) {
