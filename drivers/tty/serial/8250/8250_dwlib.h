@@ -43,7 +43,6 @@ struct dw8250_data {
 	struct work_struct	clk_work;
 	struct reset_control	*rst;
 
-	unsigned int		skip_autocfg:1;
 	unsigned int		uart_16550_compatible:1;
 };
 

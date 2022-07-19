@@ -56,6 +56,7 @@
 #define DW_UART_QUIRK_ARMADA_38X	BIT(1)
 #define DW_UART_QUIRK_SKIP_SET_RATE	BIT(2)
 #define DW_UART_QUIRK_IS_DMA_FC		BIT(3)
+#define DW_UART_QUIRK_SKIP_AUTOCFG	BIT(4)
 
 static inline struct dw8250_data *clk_to_dw8250_data(struct notifier_block *nb)
 {
@@ -461,7 +462,6 @@ static void dw8250_quirks(struct uart_port *p, struct dw8250_data *data)
 			p->serial_out = dw8250_serial_outq;
 			p->flags = UPF_SKIP_TEST | UPF_SHARE_IRQ | UPF_FIXED_TYPE;
 			p->type = PORT_OCTEON;
-			data->skip_autocfg = true;
 		}
 #endif
 
@@ -647,7 +647,7 @@ static int dw8250_probe(struct platform_device *pdev)
 	if (data->uart_16550_compatible)
 		p->handle_irq = NULL;
 
-	if (!data->skip_autocfg)
+	if (!(data->pdata->quirks & DW_UART_QUIRK_SKIP_AUTOCFG))
 		dw8250_setup_port(p);
 
 	/* If we have a valid fifosize, try hooking up DMA */
@@ -753,7 +753,7 @@ static const struct dw8250_platform_data dw8250_dw_apb = {
 
 static const struct dw8250_platform_data dw8250_octeon_3860_data = {
 	.usr_reg = OCTEON_UART_USR,
-	.quirks = DW_UART_QUIRK_OCTEON,
+	.quirks = DW_UART_QUIRK_OCTEON | DW_UART_QUIRK_SKIP_AUTOCFG,
 };
 
 static const struct dw8250_platform_data dw8250_armada_38x_data = {
