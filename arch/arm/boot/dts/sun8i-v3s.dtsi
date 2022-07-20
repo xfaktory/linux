@@ -472,7 +472,8 @@
 		};
 
 		uart0: serial@1c28000 {
-			compatible = "snps,dw-apb-uart";
+			compatible = "allwinner,sun6i-a31-uart",
+				     "snps,dw-apb-uart";
 			reg = <0x01c28000 0x400>;
 			interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <2>;
@@ -485,7 +486,8 @@
 		};
 
 		uart1: serial@1c28400 {
-			compatible = "snps,dw-apb-uart";
+			compatible = "allwinner,sun6i-a31-uart",
+				     "snps,dw-apb-uart";
 			reg = <0x01c28400 0x400>;
 			interrupts = <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <2>;
@@ -498,7 +500,8 @@
 		};
 
 		uart2: serial@1c28800 {
-			compatible = "snps,dw-apb-uart";
+			compatible = "allwinner,sun6i-a31-uart",
+				     "snps,dw-apb-uart";
 			reg = <0x01c28800 0x400>;
 			interrupts = <GIC_SPI 2 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <2>;

@@ -1315,7 +1315,8 @@
 		};
 
 		uart0: serial@1c28000 {
-			compatible = "snps,dw-apb-uart";
+			compatible = "allwinner,sun6i-a31-uart",
+				     "snps,dw-apb-uart";
 			reg = <0x01c28000 0x400>;
 			interrupts = <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <2>;
@@ -1325,7 +1326,8 @@
 		};
 
 		uart1: serial@1c28400 {
-			compatible = "snps,dw-apb-uart";
+			compatible = "allwinner,sun6i-a31-uart",
+				     "snps,dw-apb-uart";
 			reg = <0x01c28400 0x400>;
 			interrupts = <GIC_SPI 2 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <2>;
@@ -1335,7 +1337,8 @@
 		};
 
 		uart2: serial@1c28800 {
-			compatible = "snps,dw-apb-uart";
+			compatible = "allwinner,sun6i-a31-uart",
+				     "snps,dw-apb-uart";
 			reg = <0x01c28800 0x400>;
 			interrupts = <GIC_SPI 3 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <2>;
@@ -1345,7 +1348,8 @@
 		};
 
 		uart3: serial@1c28c00 {
-			compatible = "snps,dw-apb-uart";
+			compatible = "allwinner,sun6i-a31-uart",
+				     "snps,dw-apb-uart";
 			reg = <0x01c28c00 0x400>;
 			interrupts = <GIC_SPI 4 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <2>;
@@ -1355,7 +1359,8 @@
 		};
 
 		uart4: serial@1c29000 {
-			compatible = "snps,dw-apb-uart";
+			compatible = "allwinner,sun6i-a31-uart",
+				     "snps,dw-apb-uart";
 			reg = <0x01c29000 0x400>;
 			interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <2>;
@@ -1365,7 +1370,8 @@
 		};
 
 		uart5: serial@1c29400 {
-			compatible = "snps,dw-apb-uart";
+			compatible = "allwinner,sun6i-a31-uart",
+				     "snps,dw-apb-uart";
 			reg = <0x01c29400 0x400>;
 			interrupts = <GIC_SPI 18 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <2>;
@@ -1375,7 +1381,8 @@
 		};
 
 		uart6: serial@1c29800 {
-			compatible = "snps,dw-apb-uart";
+			compatible = "allwinner,sun6i-a31-uart",
+				     "snps,dw-apb-uart";
 			reg = <0x01c29800 0x400>;
 			interrupts = <GIC_SPI 19 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <2>;
@@ -1385,7 +1392,8 @@
 		};
 
 		uart7: serial@1c29c00 {
-			compatible = "snps,dw-apb-uart";
+			compatible = "allwinner,sun6i-a31-uart",
+				     "snps,dw-apb-uart";
 			reg = <0x01c29c00 0x400>;
 			interrupts = <GIC_SPI 20 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <2>;
