@@ -669,6 +669,9 @@
 			reg-shift = <2>;
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_APB1_UART1>;
+			dmas = <&dma SUN4I_DMA_NORMAL 9>,
+			       <&dma SUN4I_DMA_NORMAL 9>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -691,6 +694,9 @@
 			reg-shift = <2>;
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_APB1_UART3>;
+			dmas = <&dma SUN4I_DMA_NORMAL 11>,
+			       <&dma SUN4I_DMA_NORMAL 11>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 

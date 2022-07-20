@@ -955,6 +955,9 @@
 			reg-shift = <2>;
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_APB1_UART0>;
+			dmas = <&dma SUN4I_DMA_NORMAL 8>,
+			       <&dma SUN4I_DMA_NORMAL 8>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -966,6 +969,9 @@
 			reg-shift = <2>;
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_APB1_UART1>;
+			dmas = <&dma SUN4I_DMA_NORMAL 9>,
+			       <&dma SUN4I_DMA_NORMAL 9>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -977,6 +983,9 @@
 			reg-shift = <2>;
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_APB1_UART2>;
+			dmas = <&dma SUN4I_DMA_NORMAL 10>,
+			       <&dma SUN4I_DMA_NORMAL 10>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -988,6 +997,9 @@
 			reg-shift = <2>;
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_APB1_UART3>;
+			dmas = <&dma SUN4I_DMA_NORMAL 11>,
+			       <&dma SUN4I_DMA_NORMAL 11>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -999,6 +1011,9 @@
 			reg-shift = <2>;
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_APB1_UART4>;
+			dmas = <&dma SUN4I_DMA_NORMAL 12>,
+			       <&dma SUN4I_DMA_NORMAL 12>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -1010,6 +1025,9 @@
 			reg-shift = <2>;
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_APB1_UART5>;
+			dmas = <&dma SUN4I_DMA_NORMAL 13>,
+			       <&dma SUN4I_DMA_NORMAL 13>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -1021,6 +1039,9 @@
 			reg-shift = <2>;
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_APB1_UART6>;
+			dmas = <&dma SUN4I_DMA_NORMAL 14>,
+			       <&dma SUN4I_DMA_NORMAL 14>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -1032,6 +1053,9 @@
 			reg-shift = <2>;
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_APB1_UART7>;
+			dmas = <&dma SUN4I_DMA_NORMAL 15>,
+			       <&dma SUN4I_DMA_NORMAL 15>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 

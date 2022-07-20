@@ -843,6 +843,8 @@
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_BUS_UART0>;
 			resets = <&ccu RST_BUS_UART0>;
+			dmas = <&dma 8>, <&dma 8>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -855,6 +857,8 @@
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_BUS_UART1>;
 			resets = <&ccu RST_BUS_UART1>;
+			dmas = <&dma 9>, <&dma 9>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -867,6 +871,8 @@
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_BUS_UART2>;
 			resets = <&ccu RST_BUS_UART2>;
+			dmas = <&dma 10>, <&dma 10>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -879,6 +885,8 @@
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_BUS_UART3>;
 			resets = <&ccu RST_BUS_UART3>;
+			dmas = <&dma 11>, <&dma 11>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -891,6 +899,8 @@
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_BUS_UART4>;
 			resets = <&ccu RST_BUS_UART4>;
+			dmas = <&dma 12>, <&dma 12>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -903,6 +913,8 @@
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_BUS_UART5>;
 			resets = <&ccu RST_BUS_UART5>;
+			dmas = <&dma 13>, <&dma 13>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -915,6 +927,8 @@
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_BUS_UART6>;
 			resets = <&ccu RST_BUS_UART6>;
+			dmas = <&dma 14>, <&dma 14>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
@@ -927,6 +941,8 @@
 			reg-io-width = <4>;
 			clocks = <&ccu CLK_BUS_UART7>;
 			resets = <&ccu RST_BUS_UART7>;
+			dmas = <&dma 15>, <&dma 15>;
+			dma-names = "rx", "tx";
 			status = "disabled";
 		};
 
