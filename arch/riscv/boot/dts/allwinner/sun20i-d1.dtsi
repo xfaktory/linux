@@ -7,6 +7,7 @@
 #include <dt-bindings/clock/sun20i-d1-ccu.h>
 #include <dt-bindings/clock/sun20i-d1-r-ccu.h>
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/mailbox/sun20i-d1-msgbox.h>
 #include <dt-bindings/reset/sun8i-de2.h>
 #include <dt-bindings/reset/sun20i-d1-ccu.h>
 #include <dt-bindings/reset/sun20i-d1-r-ccu.h>
@@ -67,6 +68,27 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 
+		// TODO: write a binding and driver.
+		dsp: dsp@1700000 {
+			compatible = "allwinner,sun20i-d1-dsp";
+			reg = <0x1700000 0x400>;
+			reg-names = "cfg";
+			interrupts = <136 IRQ_TYPE_LEVEL_HIGH>,
+				     <137 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "dee", "pfe";
+			clocks = <&ccu CLK_BUS_DSP_CFG>,
+				 <&ccu CLK_DSP>;
+			clock-names = "cfg", "dsp";
+			resets = <&ccu RST_BUS_DSP_CFG>,
+				 <&ccu RST_BUS_DSP_DBG>,
+				 <&ccu RST_DSP>;
+			allwinner,sram = <&dsp_sram 1>;
+			// FIXME: this will be different for R528 (CPUX).
+			mboxes = <&riscv_msgbox MBOX_USER_DSP MBOX_RX>,
+				 <&dsp_msgbox MBOX_USER_RISCV MBOX_TX>;
+			mbox-names = "rx", "tx";
+		};
+
 		dsp_wdt: watchdog@1700400 {
 			compatible = "allwinner,sun20i-d1-wdt";
 			reg = <0x1700400 0x20>;
@@ -74,6 +96,18 @@
 			clocks = <&osc24M>, <&rtc CLK_OSC32K>;
 			clock-names = "hosc", "losc";
 			status = "reserved";
+		};
+
+		// TODO: write a binding and driver.
+		dsp_msgbox: mailbox@1701000 {
+			compatible = "allwinner,sun20i-d1-msgbox";
+			reg = <0x1701000 0x1000>;
+			interrupts = <139 IRQ_TYPE_LEVEL_HIGH>,
+				     <140 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "rx", "tx";
+			clocks = <&ccu CLK_BUS_MSGBOX1>;
+			resets = <&ccu RST_BUS_MSGBOX1>;
+			#mbox-cells = <2>;
 		};
 
 		pio: pinctrl@2000000 {
@@ -417,6 +451,24 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 
+			sram@400000 {
+				compatible = "mmio-sram";
+				reg = <0x400000 0x20000>;
+				ranges = <0 0x400000 0x20000>;
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				/*
+				 * This can be further divided into DSP IRAM,
+				 * DSP DRAM0, and DSP DRAM1, but the mapping
+				 * of all three is controlled by a single bit.
+				 */
+				dsp_sram: sram-section@0 {
+					compatible = "allwinner,sun20i-d1-dsp-sram";
+					reg = <0 0x20000>;
+				};
+			};
+
 			regulators@3000150 {
 				compatible = "allwinner,sun20i-d1-system-ldos";
 				reg = <0x3000150 0x4>;
@@ -439,6 +491,26 @@
 			dma-channels = <16>;
 			dma-requests = <48>;
 			#dma-cells = <1>;
+		};
+
+		msgbox: mailbox@3003000 {
+			compatible = "allwinner,sun20i-d1-msgbox";
+			reg = <0x3003000 0x1000>;
+			interrupts = <101 IRQ_TYPE_LEVEL_HIGH>,
+				     <102 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "rx", "tx";
+			clocks = <&ccu CLK_BUS_MSGBOX0>;
+			resets = <&ccu RST_BUS_MSGBOX0>;
+			#mbox-cells = <2>;
+		};
+
+		hwspinlock: hwlock@3005000 {
+			compatible = "allwinner,sun20i-d1-hwspinlock",
+				     "allwinner,sun6i-a31-hwspinlock";
+			reg = <0x3005000 0x1000>;
+			interrupts = <70 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&ccu CLK_BUS_SPINLOCK>;
+			resets = <&ccu RST_BUS_SPINLOCK>;
 		};
 
 		sid: efuse@3006000 {
@@ -859,6 +931,17 @@
 			interrupts = <147 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&osc24M>, <&rtc CLK_OSC32K>;
 			clock-names = "hosc", "losc";
+		};
+
+		riscv_msgbox: mailbox@601f000 {
+			compatible = "allwinner,sun20i-d1-msgbox";
+			reg = <0x601f000 0x1000>;
+			interrupts = <144 IRQ_TYPE_LEVEL_HIGH>,
+				     <145 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "rx", "tx";
+			clocks = <&ccu CLK_BUS_MSGBOX2>;
+			resets = <&ccu RST_BUS_MSGBOX2>;
+			#mbox-cells = <2>;
 		};
 
 		r_ccu: clock-controller@7010000 {
