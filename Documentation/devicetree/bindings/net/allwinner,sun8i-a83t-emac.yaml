@@ -10,6 +10,8 @@ maintainers:
   - Chen-Yu Tsai <wens@csie.org>
   - Maxime Ripard <mripard@kernel.org>
 
+$ref: "snps,dwmac.yaml#"
+
 properties:
   compatible:
     oneOf:
@@ -60,7 +62,6 @@ required:
   - syscon
 
 allOf:
-  - $ref: "snps,dwmac.yaml#"
   - if:
       properties:
         compatible:
