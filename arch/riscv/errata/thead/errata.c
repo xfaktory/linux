@@ -76,8 +76,8 @@ void __init_or_module thead_errata_patch_func(struct alt_entry *begin, struct al
 		if (cpu_req_errata & tmp) {
 			/* On vm-alternatives, the mmu isn't running yet */
 			if (stage == RISCV_ALTERNATIVES_EARLY_BOOT)
-				memcpy((void *)kernel_mapping_va_to_pa((unsigned long)alt->old_ptr),
-				       (void *)kernel_mapping_va_to_pa((unsigned long)alt->alt_ptr),
+				memcpy((void *)kernel_mapping_va_to_pa(alt->old_ptr),
+				       (void *)kernel_mapping_va_to_pa(alt->alt_ptr),
 				       alt->alt_len);
 			else
 				patch_text_nosync(alt->old_ptr, alt->alt_ptr, alt->alt_len);
