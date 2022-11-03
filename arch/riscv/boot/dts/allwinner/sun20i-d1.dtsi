@@ -110,6 +110,14 @@
 			#interrupt-cells = <3>;
 
 			/omit-if-no-ref/
+			dsi_4lane_pins: dsi-4lane-pins {
+				pins = "PD0", "PD1", "PD2", "PD3", "PD4", "PD5",
+				       "PD6", "PD7", "PD8", "PD9";
+				drive-strength = <30>;
+				function = "dsi";
+			};
+
+			/omit-if-no-ref/
 			i2c0_pb10_pins: i2c0-pb10-pins {
 				pins = "PB10", "PB11";
 				function = "i2c0";
@@ -164,6 +172,30 @@
 			};
 
 			/omit-if-no-ref/
+			pwm0_pd16_pin: pwm0-pd16-pin {
+				pins = "PD16";
+				function = "pwm0";
+			};
+
+			/omit-if-no-ref/
+			pwm2_pd18_pin: pwm2-pd18-pin {
+				pins = "PD18";
+				function = "pwm2";
+			};
+
+			/omit-if-no-ref/
+			pwm4_pd20_pin: pwm4-pd20-pin {
+				pins = "PD20";
+				function = "pwm4";
+			};
+
+			/omit-if-no-ref/
+			pwm7_pd22_pin: pwm7-pd22-pin {
+				pins = "PD22";
+				function = "pwm7";
+			};
+
+			/omit-if-no-ref/
 			uart0_pb8_pins: uart0-pb8-pins {
 				pins = "PB8", "PB9";
 				function = "uart0";
@@ -180,6 +212,17 @@
 				pins = "PG8", "PG9";
 				function = "uart1";
 			};
+		};
+
+		pwm: pwm@2000c00 {
+			compatible = "allwinner,sun20i-d1-pwm";
+			reg = <0x2000c00 0x400>;
+			interrupts = <34 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&ccu CLK_BUS_PWM>, <&osc24M>;
+			clock-names = "bus", "mod";
+			resets = <&ccu RST_BUS_PWM>;
+			status = "disabled";
+			#pwm-cells = <3>;
 		};
 
 		ccu: clock-controller@2001000 {
@@ -768,6 +811,40 @@
 			};
 		};
 
+		dsi: dsi@5450000 {
+			compatible = "allwinner,sun20i-d1-mipi-dsi",
+				     "allwinner,sun50i-a100-mipi-dsi";
+			reg = <0x5450000 0x1000>;
+			interrupts = <108 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&ccu CLK_BUS_MIPI_DSI>,
+				 <&tcon_top CLK_TCON_TOP_DSI>;
+			clock-names = "bus", "mod";
+			resets = <&ccu RST_BUS_MIPI_DSI>;
+			phys = <&dphy>;
+			phy-names = "dphy";
+			status = "disabled";
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port {
+				dsi_in_tcon_lcd0: endpoint {
+					remote-endpoint = <&tcon_lcd0_out_dsi>;
+				};
+			};
+		};
+
+		dphy: phy@5451000 {
+			compatible = "allwinner,sun20i-d1-mipi-dphy",
+				     "allwinner,sun50i-a100-mipi-dphy";
+			reg = <0x5451000 0x1000>;
+			interrupts = <108 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&ccu CLK_BUS_MIPI_DSI>,
+				 <&ccu CLK_MIPI_DSI>;
+			clock-names = "bus", "mod";
+			resets = <&ccu RST_BUS_MIPI_DSI>;
+			#phy-cells = <0>;
+		};
+
 		tcon_top: tcon-top@5460000 {
 			compatible = "allwinner,sun20i-d1-tcon-top";
 			reg = <0x5460000 0x1000>;
@@ -848,6 +925,10 @@
 
 				tcon_top_hdmi_out: port@5 {
 					reg = <5>;
+
+					tcon_top_hdmi_out_hdmi: endpoint {
+						remote-endpoint = <&hdmi_in_tcon_top>;
+					};
 				};
 			};
 		};
@@ -863,6 +944,8 @@
 			resets = <&ccu RST_BUS_TCON_LCD0>,
 				 <&ccu RST_BUS_LVDS0>;
 			reset-names = "lcd", "lvds";
+			phys = <&dphy>;
+			phy-names = "lvds0";
 			#clock-cells = <0>;
 
 			ports {
@@ -887,6 +970,13 @@
 
 				tcon_lcd0_out: port@1 {
 					reg = <1>;
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					tcon_lcd0_out_dsi: endpoint@1 {
+						reg = <1>;
+						remote-endpoint = <&dsi_in_tcon_lcd0>;
+					};
 				};
 			};
 		};
@@ -929,6 +1019,50 @@
 					};
 				};
 			};
+		};
+
+		hdmi: hdmi@5500000 {
+			compatible = "allwinner,sun20i-d1-dw-hdmi";
+			reg = <0x5500000 0x10000>;
+			reg-io-width = <1>;
+			interrupts = <109 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&ccu CLK_BUS_HDMI>,
+				 <&ccu CLK_HDMI_24M>,
+				 <&ccu CLK_HDMI_CEC>;
+			clock-names = "iahb", "isfr", "cec";
+			resets = <&ccu RST_BUS_HDMI_SUB>;
+			reset-names = "ctrl";
+			phys = <&hdmi_phy>;
+			phy-names = "phy";
+			status = "disabled";
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+
+					hdmi_in_tcon_top: endpoint {
+						remote-endpoint = <&tcon_top_hdmi_out_hdmi>;
+					};
+				};
+
+				hdmi_out: port@1 {
+					reg = <1>;
+				};
+			};
+		};
+
+		hdmi_phy: phy@5510000 {
+			compatible = "allwinner,sun20i-d1-hdmi-phy";
+			reg = <0x5510000 0x10000>;
+			clocks = <&ccu CLK_BUS_HDMI>, <&ccu CLK_HDMI_24M>;
+			clock-names = "bus", "mod";
+			resets = <&ccu RST_BUS_HDMI_MAIN>;
+			reset-names = "phy";
+			status = "disabled";
+			#phy-cells = <0>;
 		};
 
 		riscv_wdt: watchdog@6011000 {
