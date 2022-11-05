@@ -327,7 +327,7 @@ static int sys_off_notify(struct notifier_block *nb,
 	return handler->sys_off_cb(&data);
 }
 
-static struct sys_off_handler platform_sys_off_handler;
+static struct sys_off_handler early_sys_off_handler;
 
 static struct sys_off_handler *alloc_sys_off_handler(int priority)
 {
@@ -338,10 +338,8 @@ static struct sys_off_handler *alloc_sys_off_handler(int priority)
 	 * Platforms like m68k can't allocate sys_off handler dynamically
 	 * at the early boot time because memory allocator isn't available yet.
 	 */
-	if (priority == SYS_OFF_PRIO_PLATFORM) {
-		handler = &platform_sys_off_handler;
-		if (handler->cb_data)
-			return ERR_PTR(-EBUSY);
+	if (!early_sys_off_handler.sys_off_cb) {
+		handler = &early_sys_off_handler;
 	} else {
 		if (system_state > SYSTEM_RUNNING)
 			flags = GFP_ATOMIC;
@@ -358,7 +356,7 @@ static struct sys_off_handler *alloc_sys_off_handler(int priority)
 
 static void free_sys_off_handler(struct sys_off_handler *handler)
 {
-	if (handler == &platform_sys_off_handler)
+	if (handler == &early_sys_off_handler)
 		memset(handler, 0, sizeof(*handler));
 	else
 		kfree(handler);
