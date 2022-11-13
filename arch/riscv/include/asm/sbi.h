@@ -267,7 +267,6 @@ long sbi_get_mvendorid(void);
 long sbi_get_marchid(void);
 long sbi_get_mimpid(void);
 void sbi_set_timer(uint64_t stime_value);
-void sbi_shutdown(void);
 void sbi_clear_ipi(void);
 int sbi_send_ipi(const struct cpumask *cpu_mask);
 int sbi_remote_fence_i(const struct cpumask *cpu_mask);

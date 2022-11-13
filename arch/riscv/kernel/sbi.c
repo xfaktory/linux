@@ -7,7 +7,6 @@
 
 #include <linux/bits.h>
 #include <linux/init.h>
-#include <linux/pm.h>
 #include <linux/reboot.h>
 #include <asm/sbi.h>
 #include <asm/smp.h>
@@ -120,15 +119,16 @@ int sbi_console_getchar(void)
 EXPORT_SYMBOL(sbi_console_getchar);
 
 /**
- * sbi_shutdown() - Remove all the harts from executing supervisor code.
+ * __sbi_shutdown_v01() - Remove all the harts from executing supervisor code.
  *
- * Return: None
+ * Return: NOTIFY_DONE
  */
-void sbi_shutdown(void)
+static int __sbi_shutdown_v01(struct sys_off_data *data)
 {
 	sbi_ecall(SBI_EXT_0_1_SHUTDOWN, 0, 0, 0, 0, 0, 0, 0);
+
+	return NOTIFY_DONE;
 }
-EXPORT_SYMBOL(sbi_shutdown);
 
 /**
  * sbi_clear_ipi() - Clear any pending IPIs for the calling hart.
@@ -204,16 +204,18 @@ static int __sbi_rfence_v01(int fid, const struct cpumask *cpu_mask,
 
 	return result;
 }
-
-static void sbi_set_power_off(void)
-{
-	pm_power_off = sbi_shutdown;
-}
 #else
 static void __sbi_warn_unsupported(const char *extension)
 {
 	pr_warn("%s extension is not available in SBI v%lu.%lu\n",
 		extension, sbi_major_version(), sbi_minor_version());
+}
+
+static int __sbi_shutdown_v01(struct sys_off_data *data)
+{
+	__sbi_warn_unsupported("Shutdown");
+
+	return NOTIFY_DONE;
 }
 
 static void __sbi_set_timer_v01(uint64_t stime_value)
@@ -236,8 +238,6 @@ static int __sbi_rfence_v01(int fid, const struct cpumask *cpu_mask,
 
 	return 0;
 }
-
-static void sbi_set_power_off(void) {}
 #endif /* CONFIG_RISCV_SBI_V01 */
 
 static void __sbi_set_timer_v02(uint64_t stime_value)
@@ -574,10 +574,12 @@ static int sbi_srst_reboot(struct notifier_block *this,
 
 static struct notifier_block sbi_srst_reboot_nb;
 
-static void sbi_srst_power_off(void)
+static int sbi_srst_power_off(struct sys_off_data *data)
 {
 	sbi_srst_reset(SBI_SRST_RESET_TYPE_SHUTDOWN,
 		       SBI_SRST_RESET_REASON_NONE);
+
+	return NOTIFY_DONE;
 }
 
 /**
@@ -657,7 +659,6 @@ void __init sbi_init(void)
 {
 	int ret;
 
-	sbi_set_power_off();
 	ret = sbi_get_spec_version();
 	if (ret > 0)
 		sbi_spec_version = ret;
@@ -686,18 +687,25 @@ void __init sbi_init(void)
 		} else {
 			__sbi_rfence	= __sbi_rfence_v01;
 		}
-		if ((sbi_spec_version >= sbi_mk_version(0, 3)) &&
-		    (sbi_probe_extension(SBI_EXT_SRST) > 0)) {
-			pr_info("SBI SRST extension detected\n");
-			pm_power_off = sbi_srst_power_off;
-			sbi_srst_reboot_nb.notifier_call = sbi_srst_reboot;
-			sbi_srst_reboot_nb.priority = 192;
-			register_restart_handler(&sbi_srst_reboot_nb);
-		}
 	} else {
 		__sbi_set_timer = __sbi_set_timer_v01;
 		__sbi_send_ipi	= __sbi_send_ipi_v01;
 		__sbi_rfence	= __sbi_rfence_v01;
+	}
+
+	if ((sbi_spec_version >= sbi_mk_version(0, 3)) &&
+	    (sbi_probe_extension(SBI_EXT_SRST) > 0)) {
+		pr_info("SBI SRST extension detected\n");
+		sbi_srst_reboot_nb.notifier_call = sbi_srst_reboot;
+		sbi_srst_reboot_nb.priority = 192;
+		register_restart_handler(&sbi_srst_reboot_nb);
+		register_sys_off_handler(SYS_OFF_MODE_POWER_OFF,
+					 SYS_OFF_PRIO_FIRMWARE,
+					 sbi_srst_power_off, NULL);
+	} else {
+		register_sys_off_handler(SYS_OFF_MODE_POWER_OFF,
+					 SYS_OFF_PRIO_FIRMWARE,
+					 __sbi_shutdown_v01, NULL);
 	}
 
 	riscv_set_ipi_ops(&sbi_ipi_ops);
