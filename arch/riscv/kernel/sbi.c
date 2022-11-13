@@ -210,16 +210,20 @@ static void sbi_set_power_off(void)
 	pm_power_off = sbi_shutdown;
 }
 #else
+static void __sbi_warn_unsupported(const char *extension)
+{
+	pr_warn("%s extension is not available in SBI v%lu.%lu\n",
+		extension, sbi_major_version(), sbi_minor_version());
+}
+
 static void __sbi_set_timer_v01(uint64_t stime_value)
 {
-	pr_warn("Timer extension is not available in SBI v%lu.%lu\n",
-		sbi_major_version(), sbi_minor_version());
+	__sbi_warn_unsupported("Timer");
 }
 
 static int __sbi_send_ipi_v01(const struct cpumask *cpu_mask)
 {
-	pr_warn("IPI extension is not available in SBI v%lu.%lu\n",
-		sbi_major_version(), sbi_minor_version());
+	__sbi_warn_unsupported("IPI");
 
 	return 0;
 }
@@ -228,8 +232,7 @@ static int __sbi_rfence_v01(int fid, const struct cpumask *cpu_mask,
 			    unsigned long start, unsigned long size,
 			    unsigned long arg4, unsigned long arg5)
 {
-	pr_warn("remote fence extension is not available in SBI v%lu.%lu\n",
-		sbi_major_version(), sbi_minor_version());
+	__sbi_warn_unsupported("Remote fence");
 
 	return 0;
 }
