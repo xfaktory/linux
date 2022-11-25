@@ -10,6 +10,8 @@ maintainers:
   - Chen-Yu Tsai <wens@csie.org>
   - Maxime Ripard <mripard@kernel.org>
 
+$ref: "snps,dwmac.yaml#"
+
 properties:
   compatible:
     oneOf:
@@ -40,6 +42,9 @@ properties:
   clock-names:
     const: stmmaceth
 
+  phy-supply:
+    description: PHY regulator
+
   syscon:
     $ref: /schemas/types.yaml#/definitions/phandle
     description:
@@ -60,7 +65,6 @@ required:
   - syscon
 
 allOf:
-  - $ref: "snps,dwmac.yaml#"
   - if:
       properties:
         compatible:
