@@ -11,10 +11,11 @@
 #include <drm/drm_atomic.h>
 #include <drm/drm_atomic_state_helper.h>
 #include <drm/drm_connector.h>
+#include <drm/drm_crtc_helper.h>
 #include <drm/drm_damage_helper.h>
 #include <drm/drm_device.h>
 #include <drm/drm_drv.h>
-#include <drm/drm_fb_helper.h>
+#include <drm/drm_fbdev_generic.h>
 #include <drm/drm_format_helper.h>
 #include <drm/drm_gem_atomic_helper.h>
 #include <drm/drm_gem_framebuffer_helper.h>
@@ -545,19 +546,6 @@ static enum drm_mode_status simpledrm_crtc_helper_mode_valid(struct drm_crtc *cr
 	return drm_crtc_helper_mode_valid_fixed(crtc, mode, &sdev->mode);
 }
 
-static int simpledrm_crtc_helper_atomic_check(struct drm_crtc *crtc,
-					      struct drm_atomic_state *new_state)
-{
-	struct drm_crtc_state *new_crtc_state = drm_atomic_get_new_crtc_state(new_state, crtc);
-	int ret;
-
-	ret = drm_atomic_helper_check_crtc_state(new_crtc_state, false);
-	if (ret)
-		return ret;
-
-	return drm_atomic_add_affected_planes(new_state, crtc);
-}
-
 /*
  * The CRTC is always enabled. Screen updates are performed by
  * the primary plane's atomic_update function. Disabling clears
@@ -565,7 +553,7 @@ static int simpledrm_crtc_helper_atomic_check(struct drm_crtc *crtc,
  */
 static const struct drm_crtc_helper_funcs simpledrm_crtc_helper_funcs = {
 	.mode_valid = simpledrm_crtc_helper_mode_valid,
-	.atomic_check = simpledrm_crtc_helper_atomic_check,
+	.atomic_check = drm_crtc_helper_atomic_check,
 };
 
 static const struct drm_crtc_funcs simpledrm_crtc_funcs = {
@@ -751,7 +739,7 @@ static struct simpledrm_device *simpledrm_device_create(struct drm_driver *drv,
 	dev->mode_config.max_width = max_width;
 	dev->mode_config.min_height = height;
 	dev->mode_config.max_height = max_height;
-	dev->mode_config.preferred_depth = format->cpp[0] * 8;
+	dev->mode_config.preferred_depth = format->depth;
 	dev->mode_config.funcs = &simpledrm_mode_config_funcs;
 
 	/* Primary plane */
@@ -846,7 +834,7 @@ static int simpledrm_probe(struct platform_device *pdev)
 	if (ret)
 		return ret;
 
-	drm_fbdev_generic_setup(dev, 0);
+	drm_fbdev_generic_setup(dev, drm_format_info_bpp(sdev->format, 0));
 
 	return 0;
 }
