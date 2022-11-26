@@ -143,7 +143,7 @@ static struct timer_of to = {
 
 	.clkevt = {
 		.name = "sun4i_tick",
-		.rating = 350,
+		.rating = 0,
 		.features = CLOCK_EVT_FEAT_PERIODIC | CLOCK_EVT_FEAT_ONESHOT,
 		.set_state_shutdown = sun4i_clkevt_shutdown,
 		.set_state_periodic = sun4i_clkevt_set_periodic,
@@ -190,7 +190,7 @@ static int __init sun4i_timer_init(struct device_node *node)
 				     timer_of_rate(&to));
 
 	ret = clocksource_mmio_init(timer_of_base(&to) + TIMER_CNTVAL_REG(1),
-				    node->name, timer_of_rate(&to), 350, 32,
+				    node->name, timer_of_rate(&to), 0, 32,
 				    clocksource_mmio_readl_down);
 	if (ret) {
 		pr_err("Failed to register clocksource\n");
