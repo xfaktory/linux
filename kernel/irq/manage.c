@@ -1074,9 +1074,10 @@ static int irq_wait_for_interrupt(struct irqaction *action)
 static void irq_finalize_oneshot(struct irq_desc *desc,
 				 struct irqaction *action)
 {
-	if (!(desc->istate & IRQS_ONESHOT) ||
+	if (!(action->flags & IRQF_ONESHOT) ||
 	    action->handler == irq_forced_secondary_handler)
 		return;
+
 again:
 	chip_bus_lock(desc);
 	raw_spin_lock_irq(&desc->lock);
@@ -1112,8 +1113,7 @@ again:
 
 	desc->threads_oneshot &= ~action->thread_mask;
 
-	if (!desc->threads_oneshot && !irqd_irq_disabled(&desc->irq_data) &&
-	    irqd_irq_masked(&desc->irq_data))
+	if (!desc->threads_oneshot)
 		unmask_threaded_irq(desc);
 
 out_unlock:
@@ -1565,8 +1565,12 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 	 * MSI based interrupts are per se one shot safe. Check the
 	 * chip flags, so we can avoid the unmask dance at the end of
 	 * the threaded handler for those.
+	 *
+	 * If IRQCHIP_EOI_THREADED is also set, we do an EOI dance
+	 * instead of a mask/unmask dance.
 	 */
-	if (desc->irq_data.chip->flags & IRQCHIP_ONESHOT_SAFE)
+	if (desc->irq_data.chip->flags & IRQCHIP_ONESHOT_SAFE &&
+	    !(desc->irq_data.chip->flags & IRQCHIP_EOI_THREADED))
 		new->flags &= ~IRQF_ONESHOT;
 
 	/*
@@ -1755,7 +1759,8 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 		if (noirqdebug)
 			irq_settings_set_no_debug(desc);
 
-		if (new->flags & IRQF_ONESHOT)
+		if (new->flags & IRQF_ONESHOT &&
+		    !(desc->irq_data.chip->flags & IRQCHIP_ONESHOT_SAFE))
 			desc->istate |= IRQS_ONESHOT;
 
 		/* Exclude IRQ from balancing if requested */

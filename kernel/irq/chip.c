@@ -446,7 +446,9 @@ void unmask_threaded_irq(struct irq_desc *desc)
 	if (chip->flags & IRQCHIP_EOI_THREADED)
 		chip->irq_eoi(&desc->irq_data);
 
-	unmask_irq(desc);
+	if (!irqd_irq_disabled(&desc->irq_data) &&
+	    (desc->istate & IRQS_ONESHOT))
+		unmask_irq(desc);
 }
 
 /*
