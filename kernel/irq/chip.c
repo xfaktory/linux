@@ -658,10 +658,15 @@ EXPORT_SYMBOL_GPL(handle_level_irq);
 
 static void cond_unmask_eoi_irq(struct irq_desc *desc, struct irq_chip *chip)
 {
-	if (!(desc->istate & IRQS_ONESHOT)) {
-		chip->irq_eoi(&desc->irq_data);
+	/*
+	 * Do not send an EOI if the thread will do it later in
+	 * unmask_threaded_irq().
+	 */
+	if ((chip->flags & IRQCHIP_EOI_THREADED) && desc->threads_oneshot)
 		return;
-	}
+
+	chip->irq_eoi(&desc->irq_data);
+
 	/*
 	 * We need to unmask in the following cases:
 	 * - Oneshot irq which did not wake the thread (caused by a
@@ -669,12 +674,8 @@ static void cond_unmask_eoi_irq(struct irq_desc *desc, struct irq_chip *chip)
 	 *   completely).
 	 */
 	if (!irqd_irq_disabled(&desc->irq_data) &&
-	    irqd_irq_masked(&desc->irq_data) && !desc->threads_oneshot) {
-		chip->irq_eoi(&desc->irq_data);
+	    (desc->istate & IRQS_ONESHOT) && !desc->threads_oneshot)
 		unmask_irq(desc);
-	} else if (!(chip->flags & IRQCHIP_EOI_THREADED)) {
-		chip->irq_eoi(&desc->irq_data);
-	}
 }
 
 /**
