@@ -73,7 +73,6 @@ required:
   - clocks
   - clock-names
   - resets
-  - allwinner,sram
 
 additionalProperties: false
 
