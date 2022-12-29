@@ -69,7 +69,10 @@
 #define DRAM_DXnGCR0_DXODT_DISABLED	(0x2 << 4)
 #define DRAM_DXnGCR0_DXEN		(0x1 << 0)
 
+struct sun8i_a33_mbus;
+
 struct sun8i_a33_mbus_variant {
+	int (*set_dram_freq)(struct sun8i_a33_mbus *priv, unsigned long freq);
 	u32					min_dram_divider;
 	u32					max_dram_divider;
 	u32					odt_freq_mhz;
@@ -135,8 +138,8 @@ static void sun8i_a33_mbus_update_nominal_bw(struct sun8i_a33_mbus *priv,
 			   priv->data_width / 1024;
 }
 
-static int sun8i_a33_mbus_set_dram_freq(struct sun8i_a33_mbus *priv,
-					unsigned long freq)
+static int sun8i_a33_mbus_set_dram_freq_mdfs(struct sun8i_a33_mbus *priv,
+					     unsigned long freq)
 {
 	u32  ddr_freq_mhz = freq / USEC_PER_SEC; /* DDR */
 	u32 dram_freq_mhz =    ddr_freq_mhz / 2; /* SDR */
@@ -225,12 +228,12 @@ static int sun8i_a33_mbus_set_dram_target(struct device *dev,
 	if (next_freq == devfreq->previous_freq)
 		return 0;
 
-	/* The rate change is not effective until the MDFS process runs. */
+	/* The rate change is not effective until set_dram_freq() runs. */
 	ret = clk_set_rate(priv->clk_dram, next_freq);
 	if (ret)
 		goto fail;
 
-	ret = sun8i_a33_mbus_set_dram_freq(priv, next_freq);
+	ret = priv->variant->set_dram_freq(priv, next_freq);
 	if (ret)
 		goto fail;
 
@@ -474,7 +477,7 @@ static int sun8i_a33_mbus_remove(struct platform_device *pdev)
 
 	devfreq_remove_device(priv->devfreq_dram);
 
-	ret = sun8i_a33_mbus_set_dram_freq(priv, initial_freq);
+	ret = priv->variant->set_dram_freq(priv, initial_freq);
 	if (ret)
 		dev_warn(dev, "failed to restore DRAM frequency: %d\n", ret);
 
@@ -487,6 +490,7 @@ static int sun8i_a33_mbus_remove(struct platform_device *pdev)
 }
 
 static const struct sun8i_a33_mbus_variant sun50i_a64_mbus = {
+	.set_dram_freq		= sun8i_a33_mbus_set_dram_freq_mdfs,
 	.min_dram_divider	= 1,
 	.max_dram_divider	= 4,
 	.odt_freq_mhz		= 400,
