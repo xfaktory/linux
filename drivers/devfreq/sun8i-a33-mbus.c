@@ -121,7 +121,7 @@ static void sun8i_a33_mbus_restart_pmu_counters(struct sun8i_a33_mbus *priv)
 }
 
 static void sun8i_a33_mbus_update_nominal_bw(struct sun8i_a33_mbus *priv,
-					     u32 ddr_freq_mhz)
+					     u32 ddr_freq)
 {
 	/*
 	 * Nominal bandwidth (KiB per PMU period):
@@ -130,7 +130,9 @@ static void sun8i_a33_mbus_update_nominal_bw(struct sun8i_a33_mbus *priv,
 	 *   ------------- * ------------ * --------
 	 *    microsecond     PMU period    transfer
 	 */
-	priv->nominal_bw = ddr_freq_mhz * pmu_period * priv->data_width / 1024;
+	priv->nominal_bw = ddr_freq / USEC_PER_SEC *
+			   pmu_period *
+			   priv->data_width / 1024;
 }
 
 static int sun8i_a33_mbus_set_dram_freq(struct sun8i_a33_mbus *priv,
@@ -207,7 +209,7 @@ static int sun8i_a33_mbus_set_dram_freq(struct sun8i_a33_mbus *priv,
 	writel_relaxed(pwrctl, priv->reg_dram + DRAM_PWRCTL);
 
 	sun8i_a33_mbus_restart_pmu_counters(priv);
-	sun8i_a33_mbus_update_nominal_bw(priv, ddr_freq_mhz);
+	sun8i_a33_mbus_update_nominal_bw(priv, freq);
 
 	return 0;
 }
@@ -307,7 +309,7 @@ static int sun8i_a33_mbus_hw_init(struct device *dev,
 	writel_relaxed(0xffffffff, priv->reg_mbus + MBUS_MDFSMRMR);
 
 	sun8i_a33_mbus_restart_pmu_counters(priv);
-	sun8i_a33_mbus_update_nominal_bw(priv, ddr_freq / USEC_PER_SEC);
+	sun8i_a33_mbus_update_nominal_bw(priv, ddr_freq);
 
 	return 0;
 }
