@@ -3,6 +3,7 @@
 // Copyright (C) 2020-2021 Samuel Holland <samuel@sholland.org>
 //
 
+#include <linux/arm-smccc.h>
 #include <linux/clk.h>
 #include <linux/devfreq.h>
 #include <linux/err.h>
@@ -207,6 +208,26 @@ static int sun8i_a33_mbus_set_dram_freq_mdfs(struct sun8i_a33_mbus *priv,
 	writel_relaxed(pwrctl, priv->reg_dram + DRAM_PWRCTL);
 
 	return 0;
+}
+
+static int sun8i_a33_mbus_set_dram_freq_smc(struct sun8i_a33_mbus *priv,
+					    unsigned long freq)
+{
+	u32  ddr_freq_mhz = freq / USEC_PER_SEC; /* DDR */
+	u32 dram_freq_mhz =    ddr_freq_mhz / 2; /* SDR */
+	struct arm_smccc_res res;
+	unsigned long flags = 0;
+
+	if (priv->odtmap && dram_freq_mhz > priv->variant->odt_freq_mhz)
+		flags |= BIT(0);
+	if (freq == priv->freq_table[0])
+		flags |= BIT(1);
+
+	arm_smccc_smc(ARM_SMCCC_CALL_VAL(ARM_SMCCC_FAST_CALL, ARM_SMCCC_SMC_32,
+					 ARM_SMCCC_OWNER_OEM, 0x33),
+		      dram_freq_mhz, flags, 0, 0, 0, 0, 0, &res);
+
+	return res.a0;
 }
 
 static int sun8i_a33_mbus_set_dram_target(struct device *dev,
