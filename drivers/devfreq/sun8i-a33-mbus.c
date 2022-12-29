@@ -145,11 +145,6 @@ static int sun8i_a33_mbus_set_dram_freq(struct sun8i_a33_mbus *priv,
 	u32 i, tREFI_32ck, tRFC_ck;
 	int ret;
 
-	/* The rate change is not effective until the MDFS process runs. */
-	ret = clk_set_rate(priv->clk_dram, freq);
-	if (ret)
-		return ret;
-
 	/* Disable automatic self-refesh and VTF before starting MDFS. */
 	pwrctl = readl_relaxed(priv->reg_dram + DRAM_PWRCTL) &
 		 ~DRAM_PWRCTL_SELFREF_EN;
@@ -208,9 +203,6 @@ static int sun8i_a33_mbus_set_dram_freq(struct sun8i_a33_mbus *priv,
 		pwrctl |= DRAM_PWRCTL_SELFREF_EN;
 	writel_relaxed(pwrctl, priv->reg_dram + DRAM_PWRCTL);
 
-	sun8i_a33_mbus_restart_pmu_counters(priv);
-	sun8i_a33_mbus_update_nominal_bw(priv, freq);
-
 	return 0;
 }
 
@@ -219,6 +211,7 @@ static int sun8i_a33_mbus_set_dram_target(struct device *dev,
 {
 	struct sun8i_a33_mbus *priv = dev_get_drvdata(dev);
 	struct devfreq *devfreq = priv->devfreq_dram;
+	unsigned long next_freq;
 	struct dev_pm_opp *opp;
 	int ret;
 
@@ -228,15 +221,27 @@ static int sun8i_a33_mbus_set_dram_target(struct device *dev,
 
 	dev_pm_opp_put(opp);
 
-	if (*freq == devfreq->previous_freq)
+	next_freq = *freq;
+	if (next_freq == devfreq->previous_freq)
 		return 0;
 
-	ret = sun8i_a33_mbus_set_dram_freq(priv, *freq);
-	if (ret) {
-		dev_warn(dev, "failed to set DRAM frequency: %d\n", ret);
-		*freq = devfreq->previous_freq;
-	}
+	/* The rate change is not effective until the MDFS process runs. */
+	ret = clk_set_rate(priv->clk_dram, next_freq);
+	if (ret)
+		goto fail;
 
+	ret = sun8i_a33_mbus_set_dram_freq(priv, next_freq);
+	if (ret)
+		goto fail;
+
+	sun8i_a33_mbus_restart_pmu_counters(priv);
+	sun8i_a33_mbus_update_nominal_bw(priv, next_freq);
+
+	return 0;
+
+fail:
+	dev_warn(dev, "failed to set DRAM frequency: %d\n", ret);
+	*freq = devfreq->previous_freq;
 	return ret;
 }
 
