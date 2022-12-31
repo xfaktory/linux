@@ -63,6 +63,9 @@ properties:
       CMA pool to use for buffers allocation instead of the default
       CMA pool.
 
+  power-domains:
+    maxItems: 1
+
 required:
   - compatible
   - reg
