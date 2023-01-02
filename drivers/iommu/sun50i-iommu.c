@@ -441,6 +441,9 @@ static int sun50i_iommu_enable(struct sun50i_iommu *iommu)
 
 	spin_lock_irqsave(&iommu->iommu_lock, flags);
 
+	iommu_write(iommu, IOMMU_BYPASS_REG,
+		    ~atomic_read(&sun50i_domain->masters));
+
 	iommu_write(iommu, IOMMU_TTB_REG, sun50i_domain->dt_dma);
 	iommu_write(iommu, IOMMU_TLB_PREFETCH_REG,
 		    IOMMU_TLB_PREFETCH_MASTER_ENABLE(0) |
@@ -755,6 +758,17 @@ static void sun50i_iommu_detach_domain(struct sun50i_iommu *iommu,
 	iommu->domain = NULL;
 }
 
+static void sun50i_iommu_update_masters(struct sun50i_iommu *iommu,
+					struct sun50i_iommu_domain *sun50i_domain)
+{
+	unsigned long flags;
+
+	spin_lock_irqsave(&iommu->iommu_lock, flags);
+	iommu_write(iommu, IOMMU_BYPASS_REG,
+		    ~atomic_read(&sun50i_domain->masters));
+	spin_unlock_irqrestore(&iommu->iommu_lock, flags);
+}
+
 static void sun50i_iommu_detach_device(struct iommu_domain *domain,
 				       struct device *dev)
 {
@@ -770,6 +784,8 @@ static void sun50i_iommu_detach_device(struct iommu_domain *domain,
 
 	if (atomic_fetch_andnot(masters, &sun50i_domain->masters) == masters)
 		sun50i_iommu_detach_domain(iommu, sun50i_domain);
+	else
+		sun50i_iommu_update_masters(iommu, sun50i_domain);
 }
 
 static int sun50i_iommu_attach_device(struct iommu_domain *domain,
@@ -791,6 +807,8 @@ static int sun50i_iommu_attach_device(struct iommu_domain *domain,
 
 	if (atomic_fetch_or(masters, &sun50i_domain->masters) == 0)
 		sun50i_iommu_attach_domain(iommu, sun50i_domain);
+	else
+		sun50i_iommu_update_masters(iommu, sun50i_domain);
 
 	return 0;
 }
