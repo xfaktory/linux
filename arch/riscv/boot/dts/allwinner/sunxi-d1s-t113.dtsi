@@ -166,6 +166,40 @@
 			#io-channel-cells = <1>;
 		};
 
+		codec: audio-codec@2030000 {
+			compatible = "allwinner,sun20i-d1-codec",
+				     "simple-mfd",
+				     "syscon";
+			reg = <0x2030000 0x1000>;
+			ranges;
+			interrupts = <SOC_PERIPHERAL_IRQ(25) IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&ccu CLK_BUS_AUDIO>,
+				 <&ccu CLK_AUDIO_ADC>,
+				 <&ccu CLK_AUDIO_DAC>,
+				 <&dcxo>,
+				 <&rtc CLK_OSC32K>;
+			clock-names = "bus", "adc", "dac", "hosc", "losc";
+			resets = <&ccu RST_BUS_AUDIO>;
+			dmas = <&dma 7>, <&dma 7>;
+			dma-names = "rx", "tx";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			#sound-dai-cells = <0>;
+
+			regulators@2030348 {
+				compatible = "allwinner,sun20i-d1-analog-ldos";
+				reg = <0x2030348 0x4>;
+				nvmem-cells = <&bg_trim>;
+				nvmem-cell-names = "bg_trim";
+
+				reg_aldo: aldo {
+				};
+
+				reg_hpldo: hpldo {
+				};
+			};
+		};
+
 		dmic: dmic@2031000 {
 			compatible = "allwinner,sun20i-d1-dmic",
 				     "allwinner,sun50i-h6-dmic";
@@ -426,6 +460,11 @@
 			reg = <0x3006000 0x1000>;
 			#address-cells = <1>;
 			#size-cells = <1>;
+
+			bg_trim: bg-trim@28 {
+				reg = <0x28 0x4>;
+				bits = <16 8>;
+			};
 		};
 
 		crypto: crypto@3040000 {
