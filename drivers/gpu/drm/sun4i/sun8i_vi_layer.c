@@ -90,6 +90,11 @@ static void sun8i_vi_layer_update_alpha(struct sun8i_mixer *mixer, int channel,
 				   mask, val);
 	} else if (mixer->cfg->vi_num == 1) {
 		regmap_update_bits(mixer->engine.regs,
+				   SUN8I_MIXER_CHAN_VI_LAYER_ATTR(ch_base,
+								  overlay),
+				   SUN50I_MIXER_CHAN_VI_LAYER_ATTR_ALPHA_MASK,
+				   SUN50I_MIXER_CHAN_VI_LAYER_ATTR_ALPHA_MASK);
+		regmap_update_bits(mixer->engine.regs,
 				   SUN8I_MIXER_FCC_GLOBAL_ALPHA_REG,
 				   SUN8I_MIXER_FCC_GLOBAL_ALPHA_MASK,
 				   SUN8I_MIXER_FCC_GLOBAL_ALPHA
