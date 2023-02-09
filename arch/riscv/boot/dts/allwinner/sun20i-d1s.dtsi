@@ -52,6 +52,12 @@
 		};
 	};
 
+	timer {
+		compatible = "riscv,timer";
+		interrupts-extended = <&cpu0_intc 5>;
+		riscv,timer-cannot-wake-cpu;
+	};
+
 	soc {
 		interrupt-parent = <&plic>;
 
