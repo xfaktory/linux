@@ -1,5 +1,11 @@
 menu "SoC selection"
 
+config ARCH_BFLB
+	bool "Bouffalo Lab SoCs"
+	help
+	  This enables support for Bouffalo Lab platform hardware,
+	  including boards based on the BL808 SoC.
+
 config ARCH_MICROCHIP_POLARFIRE
 	def_bool SOC_MICROCHIP_POLARFIRE
 
