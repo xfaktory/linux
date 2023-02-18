@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: GPL-2.0
+
+config CLK_BFLB_BL808
+	bool "Bouffalo Lab BL808 clock support"
+	depends on ARCH_BFLB || COMPILE_TEST
+	default ARCH_BFLB
+	help
+	  Say yes here to support the clock controllers in the Bouffalo Lab
+	  BL808 SoC.
