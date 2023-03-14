@@ -127,6 +127,16 @@ config PINCTRL_AXP209
 	  selected.
 	  Say Y to enable pinctrl and GPIO support for the AXP209 PMIC.
 
+config PINCTRL_BFLB
+	bool "Bouffalo Lab pinctrl driver"
+	depends on ARCH_BFLB || COMPILE_TEST
+	default ARCH_BFLB
+	select GENERIC_PINCONF
+	select GENERIC_PINCTRL_GROUPS
+	select GENERIC_PINMUX_FUNCTIONS
+	help
+	  Pinctrl driver for Bouffalo Lab BL808 SoC.
+
 config PINCTRL_BM1880
 	bool "Bitmain BM1880 Pinctrl driver"
 	depends on OF && (ARCH_BITMAIN || COMPILE_TEST)
