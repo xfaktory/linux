@@ -3220,6 +3220,8 @@ static int try_enable_preferred_console(struct console *newcon,
 			continue;
 		if (!newcon->match ||
 		    newcon->match(newcon, c->name, c->index, c->options) != 0) {
+			int saved_index = newcon->index;
+
 			/* default matching */
 			BUILD_BUG_ON(sizeof(c->name) != sizeof(newcon->name));
 			if (strcmp(c->name, newcon->name) != 0)
@@ -3234,8 +3236,10 @@ static int try_enable_preferred_console(struct console *newcon,
 				return 0;
 
 			if (newcon->setup &&
-			    (err = newcon->setup(newcon, c->options)) != 0)
+			    (err = newcon->setup(newcon, c->options)) != 0) {
+				newcon->index = saved_index;
 				return err;
+			}
 		}
 		newcon->flags |= CON_ENABLED;
 		if (i == preferred_console)
@@ -3257,11 +3261,15 @@ static int try_enable_preferred_console(struct console *newcon,
 /* Try to enable the console unconditionally */
 static void try_enable_default_console(struct console *newcon)
 {
+	int saved_index = newcon->index;
+
 	if (newcon->index < 0)
 		newcon->index = 0;
 
-	if (newcon->setup && newcon->setup(newcon, NULL) != 0)
+	if (newcon->setup && newcon->setup(newcon, NULL) != 0) {
+		newcon->index = saved_index;
 		return;
+	}
 
 	newcon->flags |= CON_ENABLED;
 
