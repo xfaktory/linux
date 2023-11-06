@@ -39,6 +39,12 @@
 		VCC-supply = <&reg_aldo1>;
 	};
 
+	backlight: backlight {
+		compatible = "pwm-backlight";
+		power-supply = <&reg_vcc>;
+		pwms = <&pwm 4 50000 0>; /* PD20/GPIO9 */
+	};
+
 	bt_sco_codec: bt-sco-codec {
 		#sound-dai-cells = <0>;
 		compatible = "linux,bt-sco";
@@ -66,16 +72,24 @@
 		};
 	};
 
-	/*
-	 * This regulator is PWM-controlled, but the PWM controller is not
-	 * yet supported, so fix the regulator to its default voltage.
-	 */
+	hdmi_connector: connector {
+		compatible = "hdmi-connector";
+		type = "d";
+
+		port {
+			hdmi_connector_in: endpoint {
+				remote-endpoint = <&hdmi_out_connector>;
+			};
+		};
+	};
+
 	reg_vdd_cpu: vdd-cpu {
-		compatible = "regulator-fixed";
+		compatible = "pwm-regulator";
+		pwms = <&pwm 0 50000 0>;
+		pwm-supply = <&reg_vcc>;
 		regulator-name = "vdd-cpu";
-		regulator-min-microvolt = <1100000>;
-		regulator-max-microvolt = <1100000>;
-		vin-supply = <&reg_vcc>;
+		regulator-min-microvolt = <810000>;
+		regulator-max-microvolt = <1160000>;
 	};
 
 	wifi_pwrseq: wifi-pwrseq {
@@ -111,7 +125,26 @@
 	clock-frequency = <24000000>;
 };
 
+&de {
+	status = "okay";
+};
+
 &ehci1 {
+	status = "okay";
+};
+
+&hdmi {
+	hvcc-supply = <&reg_ldoa>;
+	status = "okay";
+};
+
+&hdmi_out {
+	hdmi_out_connector: endpoint {
+		remote-endpoint = <&hdmi_connector_in>;
+	};
+};
+
+&hdmi_phy {
 	status = "okay";
 };
 
@@ -299,6 +332,12 @@
 		pins = "PG15";
 		function = "i2s1_dout";
 	};
+};
+
+&pwm {
+	pinctrl-0 = <&pwm0_pd16_pin>, <&pwm4_pd20_pin>;
+	pinctrl-names = "default";
+	status = "okay";
 };
 
 &uart0 {

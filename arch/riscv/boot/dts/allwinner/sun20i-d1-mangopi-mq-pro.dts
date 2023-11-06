@@ -22,13 +22,25 @@
 		stdout-path = "serial0:115200n8";
 	};
 
+	hdmi_connector: connector {
+		compatible = "hdmi-connector";
+		type = "c";
+
+		port {
+			hdmi_connector_in: endpoint {
+				remote-endpoint = <&hdmi_out_connector>;
+			};
+		};
+	};
+
 	leds {
-		compatible = "gpio-leds";
+		compatible = "pwm-leds";
 
 		led-0 {
 			color = <LED_COLOR_ID_BLUE>;
 			function = LED_FUNCTION_STATUS;
-			gpios = <&pio 3 18 GPIO_ACTIVE_HIGH>; /* PD18 */
+			max-brightness = <255>;
+			pwms = <&pwm 2 50000 0>;
 		};
 	};
 
@@ -70,7 +82,26 @@
 	clock-frequency = <24000000>;
 };
 
+&de {
+	status = "okay";
+};
+
 &ehci1 {
+	status = "okay";
+};
+
+&hdmi {
+	hvcc-supply = <&reg_ldoa>;
+	status = "okay";
+};
+
+&hdmi_out {
+	hdmi_out_connector: endpoint {
+		remote-endpoint = <&hdmi_connector_in>;
+	};
+};
+
+&hdmi_phy {
 	status = "okay";
 };
 
@@ -109,6 +140,12 @@
 
 &pio {
 	vcc-pe-supply = <&reg_avdd2v8>;
+};
+
+&pwm {
+	pinctrl-0 = <&pwm2_pd18_pin>;
+	pinctrl-names = "default";
+	status = "okay";
 };
 
 &uart0 {
