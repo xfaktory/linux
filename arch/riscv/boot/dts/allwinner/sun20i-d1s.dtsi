@@ -52,6 +52,12 @@
 		};
 	};
 
+	timer {
+		compatible = "riscv,timer";
+		interrupts-extended = <&cpu0_intc 5>;
+		riscv,timer-cannot-wake-cpu;
+	};
+
 	soc {
 		interrupt-parent = <&plic>;
 
@@ -73,6 +79,16 @@
 			riscv,ndev = <175>;
 			#address-cells = <0>;
 			#interrupt-cells = <2>;
+		};
+
+		clint: clint@14000000 {
+			compatible = "allwinner,sun20i-d1-clint",
+				     "thead,c900-clint";
+			reg = <0x14000000 0xc000>;
+			interrupts-extended = <&cpu0_intc 7>,
+					      <&cpu0_intc 5>,
+					      <&cpu0_intc 3>,
+					      <&cpu0_intc 1>;
 		};
 	};
 
