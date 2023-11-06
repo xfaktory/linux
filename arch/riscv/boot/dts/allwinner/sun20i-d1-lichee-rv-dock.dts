@@ -59,6 +59,18 @@
 	status = "okay";
 };
 
+&lradc {
+	vref-supply = <&reg_aldo>;
+	status = "okay";
+
+	button-220 {
+		label = "OK";
+		linux,code = <KEY_OK>;
+		channel = <0>;
+		voltage = <220000>;
+	};
+};
+
 &mmc1 {
 	bus-width = <4>;
 	mmc-pwrseq = <&wifi_pwrseq>;

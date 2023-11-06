@@ -111,6 +111,12 @@
 	vcc-pe-supply = <&reg_avdd2v8>;
 };
 
+&reg_ldob {
+	regulator-name = "vcc-dram";
+	regulator-always-on;
+	ldo-in-supply = <&reg_vcc_3v3>;
+};
+
 &uart3 {
 	pinctrl-0 = <&uart3_pb_pins>;
 	pinctrl-names = "default";
