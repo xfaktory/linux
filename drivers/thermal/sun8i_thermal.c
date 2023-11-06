@@ -17,6 +17,7 @@
 #include <linux/of.h>
 #include <linux/platform_device.h>
 #include <linux/regmap.h>
+#include <linux/regulator/consumer.h>
 #include <linux/reset.h>
 #include <linux/slab.h>
 #include <linux/thermal.h>
@@ -50,7 +51,8 @@
 #define SUN8I_THS_CTRL2_T_ACQ1(x)		((GENMASK(15, 0) & (x)) << 16)
 #define SUN8I_THS_DATA_IRQ_STS(x)		BIT(x + 8)
 
-#define SUN50I_THS_CTRL0_T_ACQ(x)		((GENMASK(15, 0) & (x)) << 16)
+#define SUN50I_THS_CTRL0_FS_DIV(x)		((GENMASK(15, 0) & (x)) << 16)
+#define SUN50I_THS_CTRL0_T_ACQ(x)		(GENMASK(15, 0) & (x))
 #define SUN50I_THS_FILTER_EN			BIT(2)
 #define SUN50I_THS_FILTER_TYPE(x)		(GENMASK(1, 0) & (x))
 #define SUN50I_H6_THS_PC_TEMP_PERIOD(x)		((GENMASK(19, 0) & (x)) << 12)
@@ -65,6 +67,7 @@ struct tsensor {
 struct ths_thermal_chip {
 	bool            has_mod_clk;
 	bool            has_bus_clk_reset;
+	bool            has_vref_supply;
 	int		sensor_num;
 	int		offset;
 	int		scale;
@@ -82,6 +85,7 @@ struct ths_device {
 	const struct ths_thermal_chip		*chip;
 	struct device				*dev;
 	struct regmap				*regmap;
+	struct regulator			*vref_supply;
 	struct reset_control			*reset;
 	struct clk				*bus_clk;
 	struct clk                              *mod_clk;
@@ -189,7 +193,7 @@ static irqreturn_t sun8i_irq_thread(int irq, void *data)
 
 	for_each_set_bit(i, &irq_bitmap, tmdev->chip->sensor_num) {
 		thermal_zone_device_update(tmdev->sensor[i].tzd,
-					   THERMAL_EVENT_UNSPECIFIED);
+					   THERMAL_EVENT_TEMP_SAMPLE);
 	}
 
 	return IRQ_HANDLED;
@@ -339,6 +343,12 @@ static int sun8i_ths_resource_init(struct ths_device *tmdev)
 	if (IS_ERR(tmdev->regmap))
 		return PTR_ERR(tmdev->regmap);
 
+	if (tmdev->chip->has_vref_supply) {
+		tmdev->vref_supply = devm_regulator_get_enable(dev, "vref");
+		if (IS_ERR(tmdev->vref_supply))
+			return PTR_ERR(tmdev->vref_supply);
+	}
+
 	if (tmdev->chip->has_bus_clk_reset) {
 		tmdev->reset = devm_reset_control_get(dev, NULL);
 		if (IS_ERR(tmdev->reset))
@@ -410,25 +420,22 @@ static int sun8i_h3_thermal_init(struct ths_device *tmdev)
 	return 0;
 }
 
-/*
- * Without this undocumented value, the returned temperatures would
- * be higher than real ones by about 20C.
- */
-#define SUN50I_H6_CTRL0_UNK 0x0000002f
-
 static int sun50i_h6_thermal_init(struct ths_device *tmdev)
 {
 	int val;
 
 	/*
-	 * T_acq = 20us
+	 * T_sample = 20us > T_acq + T_conv
+	 * T_acq = 2us
+	 * T_conv = 14 cycles
 	 * clkin = 24MHz
 	 *
-	 * x = T_acq * clkin - 1
+	 * x = T_sample * clkin - 1
 	 *   = 479
 	 */
 	regmap_write(tmdev->regmap, SUN50I_THS_CTRL0,
-		     SUN50I_H6_CTRL0_UNK | SUN50I_THS_CTRL0_T_ACQ(479));
+		     SUN50I_THS_CTRL0_FS_DIV(479) |
+		     SUN50I_THS_CTRL0_T_ACQ(47));
 	/* average over 4 samples */
 	regmap_write(tmdev->regmap, SUN50I_H6_THS_MFC,
 		     SUN50I_THS_FILTER_EN |
@@ -556,6 +563,20 @@ static const struct ths_thermal_chip sun8i_r40_ths = {
 	.calc_temp = sun8i_ths_calc_temp,
 };
 
+static const struct ths_thermal_chip sun20i_d1_ths = {
+	.sensor_num = 1,
+	.offset = 188147,
+	.scale = 672,
+	.has_mod_clk = true,
+	.has_bus_clk_reset = true,
+	.has_vref_supply = true,
+	.temp_data_base = SUN50I_H6_THS_TEMP_DATA,
+	.calibrate = sun50i_h6_ths_calibrate,
+	.init = sun50i_h6_thermal_init,
+	.irq_ack = sun50i_h6_irq_ack,
+	.calc_temp = sun8i_ths_calc_temp,
+};
+
 static const struct ths_thermal_chip sun50i_a64_ths = {
 	.sensor_num = 3,
 	.offset = 260890,
@@ -610,6 +631,7 @@ static const struct of_device_id of_ths_match[] = {
 	{ .compatible = "allwinner,sun8i-a83t-ths", .data = &sun8i_a83t_ths },
 	{ .compatible = "allwinner,sun8i-h3-ths", .data = &sun8i_h3_ths },
 	{ .compatible = "allwinner,sun8i-r40-ths", .data = &sun8i_r40_ths },
+	{ .compatible = "allwinner,sun20i-d1-ths", .data = &sun20i_d1_ths },
 	{ .compatible = "allwinner,sun50i-a64-ths", .data = &sun50i_a64_ths },
 	{ .compatible = "allwinner,sun50i-a100-ths", .data = &sun50i_a100_ths },
 	{ .compatible = "allwinner,sun50i-h5-ths", .data = &sun50i_h5_ths },
